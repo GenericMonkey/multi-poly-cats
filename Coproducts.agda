@@ -65,5 +65,16 @@ coproduct C J D = product (C ^op) J D
 coproduct-cocone : ∀ {ℓo ℓt ℓJ} (C : Category ℓo ℓt) (J : Type ℓJ) → (D : J → C .ob) → (Σ : C .ob) → ((j : J) → C [ D j , Σ ]) → Type _
 coproduct-cocone C J D Σ i = product-cone (C ^op) J D Σ i
 
+-- open CartesianCategory
 
+-- product-functor : {C : CartesianCategory ℓc ℓc'} (Γ : C .cat .ob) → (Functor (C .cat) (C .cat))
+-- product-functor {C = C} Γ .F-ob c =  bin-prod-ob C Γ c
+-- product-functor {C = C} Γ .F-hom {a} {b} f = prod₂-I C Γ b (π₁ C Γ a) (f ∘⟨ C .cat ⟩ (π₂ C Γ a))
+-- product-functor {C = C} Γ .F-id {a} = {!   !} 
+--   ≡⟨ {!   !} ⟩
+--   prod₂-I⟨π⟩ C Γ a
 
+-- 1 create Δ constant functor
+-- prove ∀ a,b, a×b is a product
+-- define -×- functor from C² → C
+-- a×- = C → 1 × C → C² → C
