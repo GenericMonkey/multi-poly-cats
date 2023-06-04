@@ -29,7 +29,8 @@ LeftAdjointAt : (C : Category ℓC ℓC') (D : Category ℓD ℓD') (F : Functor
 LeftAdjointAt C D F = RightAdjointAt (C ^op) (D ^op) (F ^opF)
 
 -- TODO give a better name
-AdjunctionFromPointwiseLeftAdjoints : (C : Category ℓC ℓC') (D : Category ℓD ℓD') (R : Functor C D) →
-                                      (adj : LeftAdjoint C D R) → Σ[ L ∈ Functor D C ] (L ⊣ R)
-AdjunctionFromPointwiseLeftAdjoints C D R adj =
-  {!ParamUnivElt→PshFunctorRepresentation!} , {!!}
+-- AdjunctionFromPointwiseLeftAdjoints : (C : Category ℓC ℓC') (D : Category ℓD ℓD') (R : Functor C D) →
+--                                       (adj : LeftAdjoint C D R) → Σ[ L ∈ Functor D C ] (L ⊣ R)
+-- AdjunctionFromPointwiseLeftAdjoints C D R adj =
+--   {!Par
+  amUnivElt→PshFunctorRepresentation!} , {!!}
