@@ -6,7 +6,9 @@ module Cubical.Categories.Constructions.Subobject where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
+open import Cubical.Foundations.Univalence
 
+open import Cubical.Functions.Logic
 
 open import Cubical.HITs.SetQuotients renaming ([_] to [_]ₛ)
 
@@ -138,7 +140,30 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
 
   _≤[↪]_ : {X : C .ob} → (SubObject X) → (SubObject X) → hProp _
   [a↪x] ≤[↪] [b↪x] = rec2 isSetHProp _≤↪_
-    (λ a b c abi → cong (λ x → x ≤↪ c) (a ≡⟨ {!!} ⟩ b ∎) ) {!!} [a↪x] [b↪x]
+    (λ a b c abi →
+      ⇔toPath
+        (λ y →  abi .snd .inv ⋆⟨ C ⟩ y .fst ,
+          C .⋆Assoc _ _ _ ∙
+          cong (λ v → abi .snd .inv ⋆⟨ C ⟩ v) (y .snd) ∙
+            isSym↪Iso a b abi .fst .snd
+        )
+        (λ z → abi .fst .fst ⋆⟨ C ⟩ z .fst ,
+          C .⋆Assoc _ _ _ ∙
+          cong (λ v → abi .fst .fst ⋆⟨ C ⟩ v) (z .snd) ∙
+          abi .fst .snd
+        )
+    )
+    (λ a b c bci →
+      ⇔toPath
+        (λ y →  y .fst ⋆⟨ C ⟩ bci .fst .fst ,
+          C .⋆Assoc _ _ _  ∙
+            (cong (λ v → y .fst ⋆⟨ C ⟩ v) (bci .fst .snd)) ∙ y .snd)
+        (λ z → z .fst ⋆⟨ C ⟩ bci .snd .inv ,
+          C .⋆Assoc _ _ _ ∙ cong (λ v → z .fst ⋆⟨ C ⟩ v)
+            (isSym↪Iso b c bci .fst .snd) ∙ z .snd
+        )
+    )
+    [a↪x] [b↪x]
 
   {-
   SubObjPoset : (C .ob) → Poset _ _
