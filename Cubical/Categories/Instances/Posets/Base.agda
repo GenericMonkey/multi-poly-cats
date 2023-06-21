@@ -28,13 +28,13 @@ open PreorderStr
 POSET : (ℓ ℓ' : Level) → Category _ _
 POSET ℓ ℓ' = FullSubcategory
   (PREORDER ℓ ℓ')
-  λ p → IsPoset (p .snd ._≤_)
+  λ p → IsPoset (p .fst .snd ._≤_)
 
 
 -- Trivial Display where no restrictions are placed on morphisms
 PosetDisplay : DisplayedPoset (PREORDER ℓ ℓ')
 PosetDisplay = record
-  { D-ob = λ p → IsPoset (p .snd ._≤_)
+  { D-ob = λ p → IsPoset (p .fst .snd ._≤_)
   ; D-Hom_[_,_] = λ f x y → Unit* {_}
   ; isPropHomf = isPropUnit*
   ; D-id = tt*
@@ -52,7 +52,7 @@ POSET' ℓ ℓ' = Grothendieck
 -- and monotone functions with adjoints
 BothAdjDisplay : DisplayedPoset (PREORDER ℓ ℓ')
 BothAdjDisplay = record
-  { D-ob = λ p → IsPoset (p .snd ._≤_)
+  { D-ob = λ p → IsPoset (p .fst .snd ._≤_)
   ; D-Hom_[_,_] = λ f x y → HasBothAdj f
   ; isPropHomf = λ {_} {_} {_} {x} → (isPropHasBothAdj x _)
   ; D-id = IdHasBothAdj
@@ -69,7 +69,7 @@ POSETADJ ℓ ℓ' = Grothendieck
 -- and monotone functions with left adjoints
 LeftAdjDisplay : DisplayedPoset (PREORDER ℓ ℓ')
 LeftAdjDisplay = record
-  { D-ob = λ p → IsPoset (p .snd ._≤_)
+  { D-ob = λ p → IsPoset (p .fst .snd ._≤_)
   ; D-Hom_[_,_] = λ f x y → HasLeftAdj f
   ; isPropHomf = λ {_} {_} {_} {x} → (isPropHasLeftAdj x _)
   ; D-id = IdHasLeftAdj
@@ -85,7 +85,7 @@ POSETADJL ℓ ℓ' = Grothendieck
 -- and monotone functions with right adjoints
 RightAdjDisplay : DisplayedPoset (PREORDER ℓ ℓ')
 RightAdjDisplay = record
-  { D-ob = λ p → IsPoset (p .snd ._≤_)
+  { D-ob = λ p → IsPoset (p .fst .snd ._≤_)
   ; D-Hom_[_,_] = λ f x y → HasRightAdj f
   ; isPropHomf = λ {_} {_} {_} {x} → (isPropHasRightAdj x _)
   ; D-id = IdHasRightAdj

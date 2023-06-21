@@ -14,15 +14,16 @@ private
 
 open Category
 
--- Category of Posets
+-- Category of Preorders
+-- Objects are Preorders with data that type is a set
 PREORDER : (ℓ ℓ' : Level) → Category _ _
 PREORDER ℓ ℓ' = record
-  { ob = Preorder ℓ ℓ'
-  ; Hom[_,_] = λ X Y → MonFun X Y
+  { ob = Σ[ P ∈ Preorder ℓ ℓ' ] isSet (P .fst)
+  ; Hom[_,_] = λ X Y → MonFun (X .fst) (Y .fst)
   ; id = MonId
   ; _⋆_ = MonComp
-  ; ⋆IdL = λ {X} {Y} f → eqMon f f refl
-  ; ⋆IdR = λ {X} {Y} f → eqMon f f refl
-  ; ⋆Assoc = λ {X} {Y} {Z} {W} f g h → eqMon _ _ refl
-  ; isSetHom = MonFunIsSet
+  ; ⋆IdL = λ f → eqMon _ _ refl
+  ; ⋆IdR = λ f → eqMon _ _ refl
+  ; ⋆Assoc = λ f g h → eqMon _ _ refl
+  ; isSetHom = λ {_} {Y} → MonFunIsSet (Y .snd)
   }

@@ -36,7 +36,7 @@ record IsPreorder {A : Type ℓ} (_≤_ : A → A → Type ℓ') : Type (ℓ-max
   constructor ispreorder
 
   field
-    is-set : isSet A
+    -- is-set : isSet A
     is-prop-valued : isPropValued _≤_
     is-refl : isRefl _≤_
     is-trans : isTrans _≤_
@@ -85,10 +85,13 @@ PreorderEquiv M N = Σ[ e ∈ ⟨ M ⟩ ≃ ⟨ N ⟩ ] IsPreorderEquiv (M .snd)
 isPropIsPreorder : {A : Type ℓ} (_≤_ : A → A → Type ℓ')
                     → isProp (IsPreorder _≤_)
 isPropIsPreorder _≤_ = isOfHLevelRetractFromIso 1 IsPreorderIsoΣ
-  (isPropΣ isPropIsSet
-    λ isSetA → isPropΣ (isPropΠ2 (λ _ _ → isPropIsProp))
-      λ isPropValued≤ -> isProp× (isPropΠ (λ _ -> isPropValued≤ _ _))
-                                 (isPropΠ5 (λ _ _ _ _ _ -> isPropValued≤ _ _)))
+  (isPropΣ
+    (isPropΠ2 (λ _ _ → isPropIsProp))
+    (λ isPropValued≤ → isProp×
+      (isPropΠ (λ _ -> isPropValued≤ _ _))
+      (isPropΠ5 (λ _ _ _ _ _ -> isPropValued≤ _ _))
+    )
+  )
 
 𝒮ᴰ-Preorder : DUARel (𝒮-Univ ℓ) (PreorderStr ℓ') (ℓ-max ℓ ℓ')
 𝒮ᴰ-Preorder =
