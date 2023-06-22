@@ -6,15 +6,18 @@ module Cubical.Categories.Constructions.Subobject where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
-open import Cubical.Foundations.Univalence
-
+open import Cubical.Foundations.Structure
+open import Cubical.Foundations.Isomorphism
 open import Cubical.Functions.Logic
 
 open import Cubical.HITs.SetQuotients renaming ([_] to [_]ₛ)
+open import Cubical.HITs.PropositionalTruncation renaming
+  (rec to recp ;
+  rec2 to rec2p)
 
 
 open import Cubical.Data.Sigma
-open import Cubical.Categories.Category
+open import Cubical.Categories.Category renaming (isIso to isIsoC)
 open import Cubical.Categories.Morphism
 open import Cubical.Relation.Binary
 open import Cubical.Relation.Binary.Poset
@@ -52,11 +55,11 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
   open BinaryRelation
 
   -- refl due to identity
-  isRefl≤↪ : {X : C .ob} → isRefl( (λ a b → (_≤↪_ {X} a b) .fst) )
+  isRefl≤↪ : {X : C .ob} → isRefl( (λ a b →  ⟨ _≤↪_ {X} a b ⟩ ) )
   isRefl≤↪ = (λ (_ , (f , _)) → (C .id) , C .⋆IdL f)
 
   -- trans is just composition
-  isTrans≤↪ : {X : C .ob} → isTrans( (λ a b → (_≤↪_ {X} a b) .fst) )
+  isTrans≤↪ : {X : C .ob} → isTrans( (λ a b →  ⟨ _≤↪_ {X} a b ⟩) )
   isTrans≤↪ =
         (λ _ _ (_ , (h , _))
           (p , pg≡f) (q , qh≡g) →  p ⋆⟨ C ⟩ q ,
@@ -72,25 +75,25 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
     -- preorder is the existence of a morphism between domains
     -- that commutes with monic morphisms
     preorderstr
-      (λ a b → (a ≤↪ b) .fst)
+      (λ a b → ⟨ a ≤↪ b ⟩ )
       (ispreorder
-        (λ a b → (a ≤↪ b) .snd)
+        (λ a b → str (a ≤↪ b))
         (isRefl≤↪ {X})
         (isTrans≤↪ {X})
       )
 
   ↪Iso : {X : C .ob} → -↪ X → -↪ X → Type _
-  ↪Iso a↪x b↪x = Σ[ k ∈ (a↪x ≤↪ b↪x) .fst ] isIso C (k .fst)
+  ↪Iso a↪x b↪x = Σ[ k ∈ ⟨ a↪x ≤↪ b↪x ⟩ ] isIsoC C (k .fst)
 
 
   isProp↪Iso : {X : C .ob} → (a↪x : -↪ X) → (b↪x : -↪ X)
     → isProp (↪Iso a↪x b↪x)
-  isProp↪Iso a↪x b↪x = isPropΣ ((a↪x ≤↪ b↪x) .snd) λ _ → isPropIsIso _
+  isProp↪Iso a↪x b↪x = isPropΣ (str (a↪x ≤↪ b↪x)) λ _ → isPropIsIso _
 
   isRefl↪Iso : {X : C .ob} → isRefl(↪Iso {X})
   isRefl↪Iso = λ a↪x → isRefl≤↪ a↪x , isiso (C .id) (C .⋆IdL (C .id)) (C .⋆IdL (C .id))
 
-  open isIso
+  open isIsoC
 
   isTrans↪Iso : {X : C .ob} → isTrans(↪Iso {X})
   isTrans↪Iso = λ a↪x b↪x c↪x abi bci →
@@ -165,13 +168,42 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
     )
     [a↪x] [b↪x]
 
-  {-
+  isRefl≤[↪] : {X : C .ob} → isRefl( (λ a b →  ⟨ _≤[↪]_ {X} a b ⟩ ) )
+  isRefl≤[↪] = elimProp
+    (λ [a↪x] → str ([a↪x] ≤[↪] [a↪x]))
+    isRefl≤↪
+
+  isTrans≤[↪] : {X : C .ob} → isTrans( (λ a b →  ⟨ _≤[↪]_ {X} a b ⟩ ) )
+  isTrans≤[↪] = elimProp3
+    (λ [a↪x] [b↪x] [c↪x] → isProp→ (isProp→ (str ([a↪x] ≤[↪] [c↪x]))))
+    isTrans≤↪
+
+  isSetSubObj : {X : C .ob} → isSet (SubObject X)
+  isSetSubObj = {!!}
+
+  isAntisym≤[↪] : {X : C .ob} → isAntisym( (λ a b →  ⟨ _≤[↪]_ {X} a b ⟩ ) )
+  isAntisym≤[↪] = λ [a] [b] [a]≤[b] [b]≤[a] → rec2p
+    (isSetSubObj [a] [b])
+    (λ (a , arep) (b , brep) →
+      (sym arep) ∙
+      ((isEquivRel→effectiveIso isProp↪Iso isEquivRel↪Iso) a b .Iso.inv
+        (({! [a]≤[b]  !} , {!!}) , {!!})
+      ) ∙
+      brep
+    )
+    ([]surjective [a]) ([]surjective [b])
+
   SubObjPoset : (C .ob) → Poset _ _
   SubObjPoset X =
     -- objects are the subobjects
     (SubObject X) ,
     (posetstr
-      (_≤[↪]_)
-      {!!}
+      (λ a b → ⟨ a ≤[↪] b ⟩ )
+      (isposet
+        isSetSubObj
+        ((λ a b → str (a ≤[↪] b ) ))
+        isRefl≤[↪]
+        isTrans≤[↪]
+        isAntisym≤[↪]
+      )
     )
-  -}
