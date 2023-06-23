@@ -7,17 +7,17 @@ open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Structure
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Equiv
+
 open import Cubical.Functions.Logic
 
 open import Cubical.HITs.SetQuotients renaming ([_] to [_]ₛ)
 open import Cubical.HITs.SetQuotients.EqClass
-open import Cubical.HITs.PropositionalTruncation renaming
-  (rec to recp ;
-  rec2 to rec2p)
+open import Cubical.HITs.PropositionalTruncation renaming (rec2 to rec2p)
 
 open import Cubical.Data.Sigma
 open import Cubical.Categories.Category renaming (isIso to isIsoC)
 open import Cubical.Categories.Morphism
+open import Cubical.Categories.Limits.Pullback
 open import Cubical.Relation.Binary
 open import Cubical.Relation.Binary.Poset
 
@@ -37,6 +37,8 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
   -↪_ : (C .ob) → Type _
   -↪ X  = Σ[ A ∈ C .ob ] (Σ[ f ∈ C [ A , X ] ] isMonic C f)
 
+  -- preorder is the existence of a morphism between domains
+  -- that commutes with monic morphisms
   _≤↪_ : {X : C .ob} → -↪ X → -↪ X → hProp _
   (a , (f , _)) ≤↪ (b , (g , gMon)) =
     (Σ[ k ∈ C [ a , b ] ] k ⋆⟨ C ⟩ g ≡ f) ,
@@ -68,8 +70,6 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
   MonoPreorder X =
     -- objects are monic morphisms into X
     -↪ X ,
-    -- preorder is the existence of a morphism between domains
-    -- that commutes with monic morphisms
     preorderstr
       (λ a b → ⟨ a ≤↪ b ⟩ )
       (ispreorder
@@ -99,8 +99,8 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
       ( ((bci .snd .inv ⋆⟨ C ⟩ abi .snd .inv) ⋆⟨ C ⟩
         (isTrans≤↪ a↪x b↪x c↪x (abi .fst) (bci .fst) .fst)
           ≡⟨ solveCat! C ⟩
-        (bci .snd .inv) ⋆⟨ C ⟩ ((abi .snd .inv ⋆⟨ C ⟩ abi .fst .fst) ⋆⟨ C ⟩
-          (bci .fst .fst)) ∎)
+        (bci .snd .inv) ⋆⟨ C ⟩
+        ((abi .snd .inv ⋆⟨ C ⟩ abi .fst .fst) ⋆⟨ C ⟩ (bci .fst .fst)) ∎)
         ∙
         cong (λ x → bci .snd .inv ⋆⟨ C ⟩ (x ⋆⟨ C ⟩ (bci .fst .fst)))
           (abi .snd .sec)
@@ -109,11 +109,11 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
         ∙
         bci .snd .sec
       )
-      (  (seq' C (isTrans≤↪ a↪x b↪x c↪x (abi .fst) (bci .fst) .fst)
-        (seq' C (bci .snd .inv) (abi .snd .inv))
-          ≡⟨ solveCat! C ⟩
-          seq' C (abi .fst .fst) (seq' C (seq' C (bci .fst .fst)
-            (bci .snd .inv)) (abi .snd .inv)) ∎)
+      (  ((isTrans≤↪ a↪x b↪x c↪x (abi .fst) (bci .fst) .fst) ⋆⟨ C ⟩
+         ((bci .snd .inv) ⋆⟨ C ⟩ (abi .snd .inv))
+           ≡⟨ solveCat! C ⟩
+         (abi .fst .fst) ⋆⟨ C ⟩
+         (((bci .fst .fst) ⋆⟨ C ⟩ (bci .snd .inv)) ⋆⟨ C ⟩ (abi .snd .inv)) ∎)
         ∙
         cong (λ x → abi .fst .fst ⋆⟨ C ⟩ (x ⋆⟨ C ⟩ (abi .snd .inv)))
           (bci .snd .ret)
@@ -151,7 +151,7 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
         (λ y →  abi .snd .inv ⋆⟨ C ⟩ y .fst ,
           C .⋆Assoc _ _ _ ∙
           cong (λ v → abi .snd .inv ⋆⟨ C ⟩ v) (y .snd) ∙
-            isSym↪Iso a b abi .fst .snd
+          isSym↪Iso a b abi .fst .snd
         )
         (λ z → abi .fst .fst ⋆⟨ C ⟩ z .fst ,
           C .⋆Assoc _ _ _ ∙
@@ -182,35 +182,48 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
     isTrans≤↪
 
   isSetSubObj : {X : C .ob} → isSet (SubObject X)
-  isSetSubObj {X} =
-    isSetRetract
-    (the-iso .Iso.fun)
-    (the-iso .Iso.inv)
-    (the-iso .Iso.leftInv)
-    (isSet∥ (-↪ X) ↪Iso)
-    where
-    the-iso : Iso ((-↪ X) / ↪Iso) ((-↪ X) ∥ ↪Iso)
-    the-iso = equivToIso (equivQuot {_} {ℓC'} (-↪ X) ↪Iso isEquivRel↪Iso)
+  isSetSubObj = squash/
 
   isAntisym≤[↪] : {X : C .ob} → isAntisym( (λ a b →  ⟨ _≤[↪]_ {X} a b ⟩ ) )
   isAntisym≤[↪] = λ [a] [b] [a]≤[b] [b]≤[a] → rec2p
+    {-
+      Proof by recursion on propositional truncation. []surjective gives us
+      existence of an underlying mono a and b such that [ a ] = [a] and
+      [ b ] = [b]. We stitch these paths along with a proof that [ a ] = [ b ]
+      , which is the direct proof that the 2 morphisms back and forth form
+      an isomorphism between a and b.
+    -}
     (isSetSubObj [a] [b])
     (λ (a , arep) (b , brep) →
       let
-        (k , kb=a) = transport (sym ((cong (λ x → ⟨ [ a ]ₛ ≤[↪] x ⟩) brep) ∙
-          (cong (λ x → ⟨ x ≤[↪] [b] ⟩) arep))) [a]≤[b]
-        (j , ja=b) = transport (sym ((cong (λ x → ⟨ x ≤[↪] [ a ]ₛ ⟩) brep) ∙
-          (cong (λ x → ⟨ [b] ≤[↪] x ⟩) arep))) [b]≤[a]
+        -- [a]≤[b] → [ a ] ≤ [ b ]
+        (k , kb≡a) = transport
+          (sym ((cong (λ x → ⟨ [ a ]ₛ ≤[↪] x ⟩) brep) ∙
+          (cong (λ x → ⟨ x ≤[↪] [b] ⟩) arep)))
+          [a]≤[b]
+        -- [b]≤[a] → [ b ] ≤ [ a ]
+        (j , ja≡b) = transport
+          (sym ((cong (λ x → ⟨ x ≤[↪] [ a ]ₛ ⟩) brep) ∙
+          (cong (λ x → ⟨ [b] ≤[↪] x ⟩) arep)))
+          [b]≤[a]
       in
       (sym arep) ∙
       ((isEquivRel→effectiveIso isProp↪Iso isEquivRel↪Iso) a b .Iso.inv
-        ((k , kb=a) ,
+        ((k , kb≡a) ,
         isiso
           j
-          (b .snd .snd (C .⋆Assoc _ _ _ ∙ (cong (λ z → j ⋆⟨ C ⟩ z) kb=a) ∙
-            ja=b ∙ sym (C .⋆IdL (b .snd .fst))))
-          (a .snd .snd (C .⋆Assoc _ _ _ ∙ cong (λ z → k ⋆⟨ C ⟩ z) ja=b ∙
-            kb=a ∙ sym (C .⋆IdL (a .snd .fst))))
+          (b .snd .snd
+            (C .⋆Assoc _ _ _ ∙
+            (cong (λ z → j ⋆⟨ C ⟩ z) kb≡a) ∙
+            ja≡b ∙
+            sym (C .⋆IdL (b .snd .fst)))
+          )
+          (a .snd .snd
+            (C .⋆Assoc _ _ _ ∙
+            cong (λ z → k ⋆⟨ C ⟩ z) ja≡b ∙
+            kb≡a ∙
+            sym (C .⋆IdL (a .snd .fst)))
+          )
         )
       ) ∙
       brep
@@ -231,3 +244,16 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
         isAntisym≤[↪]
       )
     )
+
+  open Cospan
+  open Pullback
+
+  PBPreservesMonic : {C : Category ℓC ℓC'} →
+    (cspn : Cospan C) → (pb : Pullback C cspn)
+    → isMonic C (cspn .s₁) → isMonic C (cspn .s₁)
+    → isMonic C (pb .pbPr₁) × isMonic C (pb .pbPr₂)
+  PBPreservesMonic cspn pb s1mon s2mon =
+    let pr₁ = pb .pbPr₁
+        pr₂ = pb .pbPr₂
+    in
+    (λ {z} {a} {a'} apr₁≡a'pr₂ → {! cong (fst) (pb .univProp  ? ? ? .snd ?)  !}) , {!!}
