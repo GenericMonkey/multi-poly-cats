@@ -2,19 +2,18 @@
 
 module Cubical.Categories.Constructions.Subobject where
 
-
-
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Structure
 open import Cubical.Foundations.Isomorphism
+open import Cubical.Foundations.Equiv
 open import Cubical.Functions.Logic
 
 open import Cubical.HITs.SetQuotients renaming ([_] to [_]ₛ)
+open import Cubical.HITs.SetQuotients.EqClass
 open import Cubical.HITs.PropositionalTruncation renaming
   (rec to recp ;
   rec2 to rec2p)
-
 
 open import Cubical.Data.Sigma
 open import Cubical.Categories.Category renaming (isIso to isIsoC)
@@ -30,7 +29,6 @@ private
     ℓC ℓC' ℓ' : Level
     A : Type ℓ'
     R : A → A → Type ℓ'
-
 
 module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
 
@@ -49,8 +47,6 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
         p≡q ,
         isProp→PathP (λ i → C .isSetHom (p≡q i ⋆⟨ C ⟩ g) f) _ _
     )
-
-
 
   open BinaryRelation
 
@@ -91,7 +87,8 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
   isProp↪Iso a↪x b↪x = isPropΣ (str (a↪x ≤↪ b↪x)) λ _ → isPropIsIso _
 
   isRefl↪Iso : {X : C .ob} → isRefl(↪Iso {X})
-  isRefl↪Iso = λ a↪x → isRefl≤↪ a↪x , isiso (C .id) (C .⋆IdL (C .id)) (C .⋆IdL (C .id))
+  isRefl↪Iso =
+    λ a↪x → isRefl≤↪ a↪x , isiso (C .id) (C .⋆IdL (C .id)) (C .⋆IdL (C .id))
 
   open isIsoC
 
@@ -99,21 +96,27 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
   isTrans↪Iso = λ a↪x b↪x c↪x abi bci →
     isTrans≤↪ a↪x b↪x c↪x (abi .fst) (bci .fst) ,
     isiso (bci .snd .inv ⋆⟨ C ⟩ abi .snd .inv)
-      ( ((bci .snd .inv ⋆⟨ C ⟩ abi .snd .inv) ⋆⟨ C ⟩ (isTrans≤↪ a↪x b↪x c↪x (abi .fst) (bci .fst) .fst)
+      ( ((bci .snd .inv ⋆⟨ C ⟩ abi .snd .inv) ⋆⟨ C ⟩
+        (isTrans≤↪ a↪x b↪x c↪x (abi .fst) (bci .fst) .fst)
           ≡⟨ solveCat! C ⟩
-        (bci .snd .inv) ⋆⟨ C ⟩ ((abi .snd .inv ⋆⟨ C ⟩ abi .fst .fst) ⋆⟨ C ⟩ (bci .fst .fst)) ∎)
+        (bci .snd .inv) ⋆⟨ C ⟩ ((abi .snd .inv ⋆⟨ C ⟩ abi .fst .fst) ⋆⟨ C ⟩
+          (bci .fst .fst)) ∎)
         ∙
-        cong (λ x → bci .snd .inv ⋆⟨ C ⟩ (x ⋆⟨ C ⟩ (bci .fst .fst))) (abi .snd .sec)
+        cong (λ x → bci .snd .inv ⋆⟨ C ⟩ (x ⋆⟨ C ⟩ (bci .fst .fst)))
+          (abi .snd .sec)
         ∙
         cong (λ x → bci .snd .inv ⋆⟨ C ⟩ x) (C .⋆IdL (bci .fst .fst))
         ∙
         bci .snd .sec
       )
-      (  (seq' C (isTrans≤↪ a↪x b↪x c↪x (abi .fst) (bci .fst) .fst) (seq' C (bci .snd .inv) (abi .snd .inv))
+      (  (seq' C (isTrans≤↪ a↪x b↪x c↪x (abi .fst) (bci .fst) .fst)
+        (seq' C (bci .snd .inv) (abi .snd .inv))
           ≡⟨ solveCat! C ⟩
-          seq' C (abi .fst .fst) (seq' C (seq' C (bci .fst .fst) (bci .snd .inv)) (abi .snd .inv)) ∎)
+          seq' C (abi .fst .fst) (seq' C (seq' C (bci .fst .fst)
+            (bci .snd .inv)) (abi .snd .inv)) ∎)
         ∙
-        cong (λ x → abi .fst .fst ⋆⟨ C ⟩ (x ⋆⟨ C ⟩ (abi .snd .inv))) (bci .snd .ret)
+        cong (λ x → abi .fst .fst ⋆⟨ C ⟩ (x ⋆⟨ C ⟩ (abi .snd .inv)))
+          (bci .snd .ret)
         ∙
         cong (λ x → abi .fst .fst ⋆⟨ C ⟩ x) (C .⋆IdL (abi .snd .inv))
         ∙
@@ -179,15 +182,36 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
     isTrans≤↪
 
   isSetSubObj : {X : C .ob} → isSet (SubObject X)
-  isSetSubObj = {!!}
+  isSetSubObj {X} =
+    isSetRetract
+    (the-iso .Iso.fun)
+    (the-iso .Iso.inv)
+    (the-iso .Iso.leftInv)
+    (isSet∥ (-↪ X) ↪Iso)
+    where
+    the-iso : Iso ((-↪ X) / ↪Iso) ((-↪ X) ∥ ↪Iso)
+    the-iso = equivToIso (equivQuot {_} {ℓC'} (-↪ X) ↪Iso isEquivRel↪Iso)
 
   isAntisym≤[↪] : {X : C .ob} → isAntisym( (λ a b →  ⟨ _≤[↪]_ {X} a b ⟩ ) )
   isAntisym≤[↪] = λ [a] [b] [a]≤[b] [b]≤[a] → rec2p
     (isSetSubObj [a] [b])
     (λ (a , arep) (b , brep) →
+      let
+        (k , kb=a) = transport (sym ((cong (λ x → ⟨ [ a ]ₛ ≤[↪] x ⟩) brep) ∙
+          (cong (λ x → ⟨ x ≤[↪] [b] ⟩) arep))) [a]≤[b]
+        (j , ja=b) = transport (sym ((cong (λ x → ⟨ x ≤[↪] [ a ]ₛ ⟩) brep) ∙
+          (cong (λ x → ⟨ [b] ≤[↪] x ⟩) arep))) [b]≤[a]
+      in
       (sym arep) ∙
       ((isEquivRel→effectiveIso isProp↪Iso isEquivRel↪Iso) a b .Iso.inv
-        (({! [a]≤[b]  !} , {!!}) , {!!})
+        ((k , kb=a) ,
+        isiso
+          j
+          (b .snd .snd (C .⋆Assoc _ _ _ ∙ (cong (λ z → j ⋆⟨ C ⟩ z) kb=a) ∙
+            ja=b ∙ sym (C .⋆IdL (b .snd .fst))))
+          (a .snd .snd (C .⋆Assoc _ _ _ ∙ cong (λ z → k ⋆⟨ C ⟩ z) ja=b ∙
+            kb=a ∙ sym (C .⋆IdL (a .snd .fst))))
+        )
       ) ∙
       brep
     )
