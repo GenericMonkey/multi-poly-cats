@@ -11,7 +11,6 @@ open import Cubical.Foundations.Equiv
 open import Cubical.Functions.Logic
 
 open import Cubical.HITs.SetQuotients renaming ([_] to [_]ₛ)
-open import Cubical.HITs.SetQuotients.EqClass
 open import Cubical.HITs.PropositionalTruncation renaming (rec2 to rec2p)
 
 open import Cubical.Data.Sigma
@@ -248,12 +247,64 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
   open Cospan
   open Pullback
 
-  PBPreservesMonic : {C : Category ℓC ℓC'} →
+  PBPreservesMonicL : {C : Category ℓC ℓC'} →
     (cspn : Cospan C) → (pb : Pullback C cspn)
-    → isMonic C (cspn .s₁) → isMonic C (cspn .s₁)
-    → isMonic C (pb .pbPr₁) × isMonic C (pb .pbPr₂)
-  PBPreservesMonic cspn pb s1mon s2mon =
+    → isMonic C (cspn .s₂)
+    → isMonic C (pb .pbPr₁)
+  PBPreservesMonicL {C} cspn pb s2mon {_} {a} {a'} =
     let pr₁ = pb .pbPr₁
         pr₂ = pb .pbPr₂
     in
-    (λ {z} {a} {a'} apr₁≡a'pr₂ → {! cong (fst) (pb .univProp  ? ? ? .snd ?)  !}) , {!!}
+    (λ apr₁≡a'pr₁ →
+    -- a == univ-prop for apr₁ and apr₂ (easy)
+    (sym (cong (fst)
+      (pb .univProp (a ⋆⟨ C ⟩ pr₁) (a ⋆⟨ C ⟩ pr₂)
+        (C .⋆Assoc _ _ _ ∙
+        (cong (λ x → a ⋆⟨ C ⟩ x) (pb .pbCommutes)) ∙
+        sym (C .⋆Assoc _ _ _))
+          .snd (a , refl , refl)
+      )
+    )) ∙
+    -- proof that a' is a univ prop for apr₁ and apr₂
+    (cong (fst)
+      (pb .univProp (a ⋆⟨ C ⟩ pr₁) (a ⋆⟨ C ⟩ pr₂)
+        (C .⋆Assoc _ _ _ ∙
+        (cong (λ x → a ⋆⟨ C ⟩ x) (pb .pbCommutes)) ∙
+        sym (C .⋆Assoc _ _ _))
+          .snd (a' ,
+            apr₁≡a'pr₁ ,
+            s2mon
+              (C .⋆Assoc _ _ _ ∙
+              cong (λ x → a ⋆⟨ C ⟩ x) (sym (pb .pbCommutes)) ∙
+              sym (C .⋆Assoc _ _ _) ∙
+              cong (λ x → x ⋆⟨ C ⟩ (cspn .s₁)) apr₁≡a'pr₁ ∙
+              (C .⋆Assoc _ _ _) ∙
+              cong (λ x → a' ⋆⟨ C ⟩ x) (pb .pbCommutes) ∙
+              sym (C .⋆Assoc _ _ _))
+          )
+      )
+    ))
+  PBPreservesMonicR : {C : Category ℓC ℓC'} →
+    (cspn : Cospan C) → (pb : Pullback C cspn)
+    → isMonic C (cspn .s₁)
+    → isMonic C (pb .pbPr₂)
+  PBPreservesMonicR {C} cspn pb s1mon =
+    PBPreservesMonicL {C}
+      (cospan (cspn .r) (cspn .m) (cspn .l) (cspn .s₂) ( cspn .s₁))
+      (record
+         { pbOb = pb .pbOb
+         ; pbPr₁ = pb .pbPr₂
+         ; pbPr₂ = pb .pbPr₁
+         ; pbCommutes = sym (pb .pbCommutes)
+         ; univProp = λ h k H' →
+           ( pb .univProp k h (sym H') .fst .fst ,
+             pb .univProp k h (sym H') .fst .snd .snd ,
+             pb .univProp k h (sym H') .fst .snd .fst
+            ) , λ (a , (b1 , b2)) →
+              let univ = (pb .univProp k h (sym H') .snd (a , (b2 , b1)))
+                  hk≡ = cong (fst) univ
+                  k≡ = cong (λ x → x .snd .fst) univ
+                  h≡ = cong (λ x → x .snd .snd) univ
+              in
+              ΣPathP ( hk≡ , ΣPathP ( h≡ , k≡ ))
+         }) s1mon
