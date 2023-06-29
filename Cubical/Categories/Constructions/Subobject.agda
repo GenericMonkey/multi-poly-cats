@@ -11,7 +11,8 @@ open import Cubical.Foundations.Equiv
 open import Cubical.Functions.Logic
 
 open import Cubical.HITs.SetQuotients renaming ([_] to [_]ₛ)
-open import Cubical.HITs.PropositionalTruncation renaming (rec2 to rec2p)
+open import Cubical.HITs.PropositionalTruncation renaming
+  (rec to recp ; rec2 to rec2p)
 
 open import Cubical.Data.Sigma
 open import Cubical.Categories.Category renaming (isIso to isIsoC)
@@ -308,3 +309,14 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
               in
               ΣPathP ( hk≡ , ΣPathP ( h≡ , k≡ ))
          }) s1mon
+
+  module _ (pb : Pullbacks C) where
+    inducedMap : {X Y : C .ob} → (f : C [ X , Y ])
+      → (SubObject Y) → (SubObject X)
+    inducedMap {X} {Y} f [a↪y] = rec isSetSubObj
+      (λ (A , (g , gmon)) →
+        let cspn = (cospan X Y A f g) in
+        let P = pb cspn in
+         [ P .pbOb , (P .pbPr₁ , PBPreservesMonicL {C} cspn P gmon) ]ₛ
+      )
+      (λ (A , (g , gmon)) (B , (h , hmon)) ((k , kh≡g) , kiso) → {!  !} ) [a↪y]
