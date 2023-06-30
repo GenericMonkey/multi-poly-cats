@@ -2,6 +2,7 @@
 
 module Cubical.Categories.Constructions.Subobject where
 
+
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Structure
@@ -14,7 +15,19 @@ open import Cubical.HITs.SetQuotients renaming ([_] to [_]ₛ)
 open import Cubical.HITs.PropositionalTruncation renaming
   (rec to recp ; rec2 to rec2p)
 
+open import Cubical.Categories.Functor
+
+open import Cubical.Data.Graph.Base
 open import Cubical.Data.Sigma
+
+open import Cubical.Categories.Instances.Functors
+open import Cubical.Categories.Instances.Functors.More
+
+open import Cubical.Categories.Adjoint.UniversalElements
+
+open import Cubical.Categories.Constructions.Free.General
+open import Cubical.Categories.Constructions.BinProduct
+
 open import Cubical.Categories.Category renaming (isIso to isIsoC)
 open import Cubical.Categories.Morphism
 open import Cubical.Categories.Limits.Pullback
@@ -320,3 +333,56 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
          [ P .pbOb , (P .pbPr₁ , PBPreservesMonicL {C} cspn P gmon) ]ₛ
       )
       (λ (A , (g , gmon)) (B , (h , hmon)) ((k , kh≡g) , kiso) → {!  !} ) [a↪y]
+
+  data obs : Type₀ where
+    x : obs
+    y : obs
+    z : obs
+
+  data homs : obs → obs → Type (ℓ-suc ℓ-zero) where
+    f : homs x y
+    g : homs z y
+
+  graph : Graph ℓ-zero (ℓ-suc ℓ-zero)
+  graph .Node = obs
+  graph .Edge = homs
+
+  open FreeCategory graph
+
+  IndexCat : Category ℓ-zero (ℓ-suc ℓ-zero)
+  IndexCat = FreeCat
+
+  _ : IndexCat [ z , y ]
+  _ = (↑ g) ⋆ₑ idₑ
+
+  WTF : Category _ _
+  WTF = FUNCTOR IndexCat C
+
+  open Functor
+
+
+  Δₐ : (a : C .ob) → WTF .ob
+  Δₐ a .F-ob _ = a
+  Δₐ a .F-hom _ = C .id {a}
+  Δₐ a .F-id = refl
+  Δₐ a .F-seq _ _ = sym (C .⋆IdR (C .id))
+
+  ΔPullback : Functor C WTF
+  ΔPullback = curryF IndexCat C {Γ = C} .F-ob (Fst C IndexCat)
+  -- ΔPullback .F-ob = Δₐ
+  -- ΔPullback .F-hom = {!!}
+  -- ΔPullback .F-id = {!!}
+  -- ΔPullback .F-seq = {!!}
+
+  F : (cspn : Cospan C) → WTF .ob
+  F cspn .F-ob x = cspn .l
+  F cspn .F-ob y = cspn .m 
+  F cspn .F-ob z = cspn .r
+  F cspn .F-hom (↑ f) = {!!}
+  F cspn .F-hom (↑ g) = {!!}
+  F cspn .F-hom idₑ = {!!}
+  F cspn .F-id = {!!}
+  F cspn .F-seq = {!!}
+
+  PullbackToRepresentable : ∀ {cspn} → Pullback C cspn → RightAdjointAt _ _ (ΔPullback) {!!}
+  PullbackToRepresentable = {!!}
