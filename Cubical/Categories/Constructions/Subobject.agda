@@ -16,6 +16,7 @@ open import Cubical.HITs.PropositionalTruncation renaming
   (rec to recp ; rec2 to rec2p)
 
 open import Cubical.Categories.Functor
+open import Cubical.Categories.NaturalTransformation
 
 open import Cubical.Data.Graph.Base
 open import Cubical.Data.Sigma
@@ -25,8 +26,13 @@ open import Cubical.Categories.Instances.Functors.More
 
 open import Cubical.Categories.Adjoint.UniversalElements
 
-open import Cubical.Categories.Constructions.Free.General
+-- open import Cubical.Categories.Constructions.Free.General
+open import Cubical.Categories.Constructions.Free.Category
+   renaming (rec to recCat)
+-- open import Cubical.Categories.Constructions.Free.UnderlyingGraph
 open import Cubical.Categories.Constructions.BinProduct
+
+open import Cubical.Categories.Presheaf.Representable
 
 open import Cubical.Categories.Category renaming (isIso to isIsoC)
 open import Cubical.Categories.Morphism
@@ -343,14 +349,26 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
     f : homs x y
     g : homs z y
 
+  data homs_quiv : Type (ℓ-suc ℓ-zero) where
+    f : homs_quiv
+    g : homs_quiv
+
   graph : Graph ℓ-zero (ℓ-suc ℓ-zero)
   graph .Node = obs
   graph .Edge = homs
 
-  open FreeCategory graph
+  quiv : Quiver ℓ-zero (ℓ-suc ℓ-zero)
+  quiv .Quiver.ob = obs
+  quiv .Quiver.mor = homs_quiv
+  quiv .Quiver.dom f = x
+  quiv .Quiver.dom g = z
+  quiv .Quiver.cod f = y
+  quiv .Quiver.cod g = y
+
+  -- open FreeCategory graph
 
   IndexCat : Category ℓ-zero (ℓ-suc ℓ-zero)
-  IndexCat = FreeCat
+  IndexCat = FreeCat quiv
 
   _ : IndexCat [ z , y ]
   _ = (↑ g) ⋆ₑ idₑ
@@ -364,20 +382,26 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
   ΔPullback : Functor C Cᴶ
   ΔPullback = curryF IndexCat C {Γ = C} .F-ob (Fst C IndexCat)
 
-  open Semantics
+  IndexCatinC : (Cospan C) → Interp quiv C
+  IndexCatinC cspn .Interp.I-ob x = cspn .l
+  IndexCatinC cspn .Interp.I-ob y = cspn .m
+  IndexCatinC cspn .Interp.I-ob z = cspn .r
+  IndexCatinC cspn .Interp.I-hom f = cspn .s₁
+  IndexCatinC cspn .Interp.I-hom g = cspn .s₂
+
+  open UnivElt
+  open NatTrans
 
   F : (cspn : Cospan C) → Cᴶ .ob
-  F cspn = {!!}
-  -- F cspn .F-ob x = cspn .l
-  -- F cspn .F-ob y = cspn .m
-  -- F cspn .F-ob z = cspn .r
-  -- F cspn .F-hom (↑ f) = cspn .s₁
-  -- F cspn .F-hom (↑ g) = cspn .s₂
-  -- F cspn .F-hom idₑ = C .id
-  -- F cspn .F-id = refl
-  -- F cspn .F-seq ϕ idₑ = {!!}
-  -- F cspn .F-seq idₑ ϕ = {!!}
-  -- F cspn .F-seq idₑ idₑ = {!!}
+  F cspn = recCat quiv C (IndexCatinC cspn)
 
-  PullbackToRepresentable : ∀ {cspn} → Pullback C cspn → RightAdjointAt _ _ (ΔPullback) {!!}
-  PullbackToRepresentable = {!!}
+  PullbackToRepresentable : ∀ {cspn} → Pullback C cspn → RightAdjointAt _ _ (ΔPullback) (F cspn)
+  PullbackToRepresentable pb .vertex = pb .pbOb
+  PullbackToRepresentable {cspn} pb .element .N-ob x = pb .pbPr₁
+
+  -- Could have equivalently defined this one with pb .pbPr₂ ⋆⟨ C ⟩ cspn .s₂
+  -- but its a pullback so theyre the same
+  PullbackToRepresentable {cspn} pb .element .N-ob y = pb .pbPr₁ ⋆⟨ C ⟩ cspn .s₁
+  PullbackToRepresentable {cspn} pb .element .N-ob z = pb .pbPr₂
+  PullbackToRepresentable {cspn} pb .element .N-hom ϕ = {!!}
+  PullbackToRepresentable pb .universal = {!!}
