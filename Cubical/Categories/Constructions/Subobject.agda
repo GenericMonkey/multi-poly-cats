@@ -23,13 +23,12 @@ open import Cubical.Data.Sigma
 
 open import Cubical.Categories.Instances.Functors
 open import Cubical.Categories.Instances.Functors.More
+open import Cubical.Categories.Instances.Cospan
 
 open import Cubical.Categories.Adjoint.UniversalElements
 
--- open import Cubical.Categories.Constructions.Free.General
 open import Cubical.Categories.Constructions.Free.Category
    renaming (rec to recCat)
--- open import Cubical.Categories.Constructions.Free.UnderlyingGraph
 open import Cubical.Categories.Constructions.BinProduct
 
 open import Cubical.Categories.Presheaf.Representable
@@ -345,17 +344,10 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
     y : obs
     z : obs
 
-  data homs : obs → obs → Type (ℓ-suc ℓ-zero) where
-    f : homs x y
-    g : homs z y
 
   data homs_quiv : Type (ℓ-suc ℓ-zero) where
     f : homs_quiv
     g : homs_quiv
-
-  graph : Graph ℓ-zero (ℓ-suc ℓ-zero)
-  graph .Node = obs
-  graph .Edge = homs
 
   quiv : Quiver ℓ-zero (ℓ-suc ℓ-zero)
   quiv .Quiver.ob = obs
@@ -370,15 +362,18 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
   IndexCat : Category ℓ-zero (ℓ-suc ℓ-zero)
   IndexCat = FreeCat quiv
 
-  _ : IndexCat [ z , y ]
-  _ = (↑ g) ⋆ₑ idₑ
+  -- _ : IndexCat [ z , y ]
+  -- _ = (↑ g) ⋆ₑ idₑ
+
+
+  -- IndexCat : Category ℓ-zero ℓ-zero
+  -- IndexCat = CospanCat
 
   Cᴶ : Category _ _
   Cᴶ = FUNCTOR IndexCat C
 
   open Functor
 
-  -- The only part of this specfic to pullbacks choice of indexing category
   ΔPullback : Functor C Cᴶ
   ΔPullback = curryF IndexCat C {Γ = C} .F-ob (Fst C IndexCat)
 
@@ -394,14 +389,30 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
 
   F : (cspn : Cospan C) → Cᴶ .ob
   F cspn = recCat quiv C (IndexCatinC cspn)
+  -- F cspn .F-ob ⓪ = cspn .l
+  -- F cspn .F-ob ① = cspn .m
+  -- F cspn .F-ob ② = cspn .r
+  -- F cspn .F-hom {⓪}{①} tt = cspn .s₁
+  -- F cspn .F-hom {②}{①} tt = cspn .s₂
+  -- F cspn .F-hom {②}{②} tt = C .id
+  -- F cspn .F-hom {①}{①} tt = C .id
+  -- F cspn .F-hom {⓪}{⓪} tt = C .id
+  -- F cspn .F-id {⓪} = refl
+  -- F cspn .F-id {①} = refl
+  -- F cspn .F-id {②} = refl
+  -- F cspn .F-seq ϕ ψ = {!!}
 
   PullbackToRepresentable : ∀ {cspn} → Pullback C cspn → RightAdjointAt _ _ (ΔPullback) (F cspn)
   PullbackToRepresentable pb .vertex = pb .pbOb
+  -- PullbackToRepresentable pb .element = {!!}
   PullbackToRepresentable {cspn} pb .element .N-ob x = pb .pbPr₁
 
-  -- Could have equivalently defined this one with pb .pbPr₂ ⋆⟨ C ⟩ cspn .s₂
+  -- Could have equivalently defined this one with pb
+  -- .pbPr₂ ⋆⟨ C ⟩ cspn .s₂
   -- but its a pullback so theyre the same
   PullbackToRepresentable {cspn} pb .element .N-ob y = pb .pbPr₁ ⋆⟨ C ⟩ cspn .s₁
   PullbackToRepresentable {cspn} pb .element .N-ob z = pb .pbPr₂
+
+  -- TODO it seems like here we need to pattern match over morphisms in IndexCat
   PullbackToRepresentable {cspn} pb .element .N-hom ϕ = {!!}
   PullbackToRepresentable pb .universal = {!!}
