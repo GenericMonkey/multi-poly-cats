@@ -355,34 +355,29 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
   _ : IndexCat [ z , y ]
   _ = (↑ g) ⋆ₑ idₑ
 
-  WTF : Category _ _
-  WTF = FUNCTOR IndexCat C
+  Cᴶ : Category _ _
+  Cᴶ = FUNCTOR IndexCat C
 
   open Functor
 
-
-  Δₐ : (a : C .ob) → WTF .ob
-  Δₐ a .F-ob _ = a
-  Δₐ a .F-hom _ = C .id {a}
-  Δₐ a .F-id = refl
-  Δₐ a .F-seq _ _ = sym (C .⋆IdR (C .id))
-
-  ΔPullback : Functor C WTF
+  -- The only part of this specfic to pullbacks choice of indexing category
+  ΔPullback : Functor C Cᴶ
   ΔPullback = curryF IndexCat C {Γ = C} .F-ob (Fst C IndexCat)
-  -- ΔPullback .F-ob = Δₐ
-  -- ΔPullback .F-hom = {!!}
-  -- ΔPullback .F-id = {!!}
-  -- ΔPullback .F-seq = {!!}
 
-  F : (cspn : Cospan C) → WTF .ob
-  F cspn .F-ob x = cspn .l
-  F cspn .F-ob y = cspn .m 
-  F cspn .F-ob z = cspn .r
-  F cspn .F-hom (↑ f) = {!!}
-  F cspn .F-hom (↑ g) = {!!}
-  F cspn .F-hom idₑ = {!!}
-  F cspn .F-id = {!!}
-  F cspn .F-seq = {!!}
+  open Semantics
+
+  F : (cspn : Cospan C) → Cᴶ .ob
+  F cspn = {!!}
+  -- F cspn .F-ob x = cspn .l
+  -- F cspn .F-ob y = cspn .m
+  -- F cspn .F-ob z = cspn .r
+  -- F cspn .F-hom (↑ f) = cspn .s₁
+  -- F cspn .F-hom (↑ g) = cspn .s₂
+  -- F cspn .F-hom idₑ = C .id
+  -- F cspn .F-id = refl
+  -- F cspn .F-seq ϕ idₑ = {!!}
+  -- F cspn .F-seq idₑ ϕ = {!!}
+  -- F cspn .F-seq idₑ idₑ = {!!}
 
   PullbackToRepresentable : ∀ {cspn} → Pullback C cspn → RightAdjointAt _ _ (ΔPullback) {!!}
   PullbackToRepresentable = {!!}
