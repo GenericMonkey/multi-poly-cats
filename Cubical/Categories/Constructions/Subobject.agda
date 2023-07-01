@@ -339,6 +339,12 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
       )
       (λ (A , (g , gmon)) (B , (h , hmon)) ((k , kh≡g) , kiso) → {!  !} ) [a↪y]
 
+  {-
+  From here down we try to show that the pullback is functorial, which would
+  give us the hole in inducedMap for free
+  -}
+
+
   data obs : Type₀ where
     x : obs
     y : obs
@@ -357,17 +363,8 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
   quiv .Quiver.cod f = y
   quiv .Quiver.cod g = y
 
-  -- open FreeCategory graph
-
   IndexCat : Category ℓ-zero (ℓ-suc ℓ-zero)
   IndexCat = FreeCat quiv
-
-  -- _ : IndexCat [ z , y ]
-  -- _ = (↑ g) ⋆ₑ idₑ
-
-
-  -- IndexCat : Category ℓ-zero ℓ-zero
-  -- IndexCat = CospanCat
 
   Cᴶ : Category _ _
   Cᴶ = FUNCTOR IndexCat C
@@ -390,6 +387,7 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
   F : (cspn : Cospan C) → Cᴶ .ob
   F cspn = recCat quiv C (IndexCatinC cspn)
 
+<<<<<<< HEAD
   -- F cspn .F-ob ⓪ = cspn .l
   -- F cspn .F-ob ① = cspn .m
   -- F cspn .F-ob ② = cspn .r
@@ -402,6 +400,56 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
   -- F cspn .F-id {①} = refl
   -- F cspn .F-id {②} = refl
   -- F cspn .F-seq ϕ ψ = {!!}
+=======
+  {-
+    IndexCat
+       f       g
+    x ---> y <--- z
+
+
+    F : (cspn : Cospan C) → Cᴶ .ob
+      sends
+         s₁       s₂
+      l ---> m < --- r
+      
+      to the functor that mapping
+      x ↦ l
+      y ↦ m
+      z ↦ r
+      f ↦ s₁
+      g ↦ s₂
+
+    
+    ΔPullback : Functor C Cᴶ
+      c : C .ob
+      gets sent to the constant functor always returning c and identity morphisms
+
+
+    Fix some (cspn : Cospan C).
+    A pullback object (pbOb : C .ob) for cspn is then just
+    the data of a natural transformation from (ΔPullback ⟅ pbOb ⟆) to (F cpsn)
+
+    As seen below,
+
+    Pullback diagram
+    pbOb --- pbPr₂ ---> r
+      |                 |
+    pbPr₁               s₂
+      |                 |
+      v                 v
+      l ----- s₁ -----> m
+
+    Natural transformation η
+    ΔPullback ⟅ pbOb ⟆ --- η z ----> F z = r
+          |     \__                      |
+         η x       \___  η y         F g = s₂
+          |            \____________     |
+          v                         \    v
+       F x = l ----- F f = s₁ -----> F y = m
+
+    where pbPr₁ and pbPr₂ are the projections of the pullback object
+  -} 
+>>>>>>> 3366363f0a8afc1f7f144ac3137bf0695167e315
 
   PullbackToRepresentable : ∀ {cspn} → Pullback C cspn
     → RightAdjointAt _ _ (ΔPullback) (F cspn)
@@ -415,7 +463,17 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
   PullbackToRepresentable {cspn} pb .element .N-ob y = pb .pbPr₁ ⋆⟨ C ⟩ cspn .s₁
   PullbackToRepresentable {cspn} pb .element .N-ob z = pb .pbPr₂
 
+
+-- Goal of .N-hom ϕ
+-- (((ΔPullback ^opF) ⟅ pb .pbOb ⟆) .F-hom ϕ
+--        Cubical.Categories.NaturalTransformation.Base._.⋆ᴰ
+--        PullbackToRepresentable pb .element .N-ob y₁)
+--       ≡
+--       (PullbackToRepresentable pb .element .N-ob x₁
+--        Cubical.Categories.NaturalTransformation.Base._.⋆ᴰ F cpsn .F-hom ϕ)
+
   -- TODO it seems like here we need to pattern match over morphisms in IndexCat
+<<<<<<< HEAD
   PullbackToRepresentable {cspn} pb .element .N-hom {a} {b} ϕ =
     let Δₐ = ((ΔPullback ^opF) ⟅ PullbackToRepresentable pb .vertex ⟆) in
     let η = PullbackToRepresentable pb .element .N-ob in
@@ -447,4 +505,8 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
       cong (λ x → (η a) ⋆⟨ C ⟩ x ) (sym (F cspn .F-seq e1 e2))
     )
     ϕ
+=======
+  PullbackToRepresentable {cspn} pb .element .N-hom ϕ = {!!}
+
+>>>>>>> 3366363f0a8afc1f7f144ac3137bf0695167e315
   PullbackToRepresentable pb .universal = {!!}
