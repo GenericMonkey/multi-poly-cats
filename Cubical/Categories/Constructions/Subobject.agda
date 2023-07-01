@@ -15,23 +15,7 @@ open import Cubical.HITs.SetQuotients renaming ([_] to [_]ₛ)
 open import Cubical.HITs.PropositionalTruncation renaming
   (rec to recp ; rec2 to rec2p)
 
-open import Cubical.Categories.Functor
-open import Cubical.Categories.NaturalTransformation
-
-open import Cubical.Data.Graph.Base
 open import Cubical.Data.Sigma
-
-open import Cubical.Categories.Instances.Functors
-open import Cubical.Categories.Instances.Functors.More
-open import Cubical.Categories.Instances.Cospan
-
-open import Cubical.Categories.Adjoint.UniversalElements
-
-open import Cubical.Categories.Constructions.Free.Category
-   renaming (rec to recCat)
-open import Cubical.Categories.Constructions.BinProduct
-
-open import Cubical.Categories.Presheaf.Representable
 
 open import Cubical.Categories.Category renaming (isIso to isIsoC)
 open import Cubical.Categories.Morphism
@@ -342,7 +326,6 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
   {-
   From here down we try to show that the pullback is functorial, which would
   give us the hole in inducedMap for free
-  -}
 
 
   data obs : Type₀ where
@@ -436,17 +419,24 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
   -}
   open isUniversal
 
-  PullbackToRepresentable : ∀ {cspn} → Pullback C cspn
-    → RightAdjointAt _ _ (ΔPullback) (F cspn)
-  PullbackToRepresentable pb .vertex = pb .pbOb
-  -- PullbackToRepresentable pb .element = {!!}
-  PullbackToRepresentable {cspn} pb .element .N-ob x = pb .pbPr₁
-
+  obMap : {cspn : Cospan C} → (o : obs) → (pb : Pullback C cspn)
+    → C [ pb .pbOb , F cspn ⟅ o ⟆ ]
+  obMap x pb = pb .pbPr₁
   -- Could have equivalently defined this one with pb
   -- .pbPr₂ ⋆⟨ C ⟩ cspn .s₂
   -- but its a pullback so theyre the same
-  PullbackToRepresentable {cspn} pb .element .N-ob y = pb .pbPr₁ ⋆⟨ C ⟩ cspn .s₁
-  PullbackToRepresentable {cspn} pb .element .N-ob z = pb .pbPr₂
+  obMap {cspn} y pb = pb .pbPr₁ ⋆⟨ C ⟩ cspn .s₁
+  obMap z pb = pb .pbPr₂
+
+  blah : {cspn : Cospan C} {b : C .ob} → (pb : Pullback C cspn)
+    → (η : NatTrans ((ΔPullback ^opF) ⟅ b ⟆) (F cspn))
+    → ∃![ hk ∈ C [ b , pb .pbOb ] ] ((η .N-ob x) ≡ hk ⋆⟨ C ⟩  pb .pbPr₁) × ((η .N-ob z) ≡ hk ⋆⟨ C ⟩  pb .pbPr₂)
+  blah {cspn} {b} pb η = pb .univProp {b} (η .N-ob x) (η .N-ob z) (sym (η .N-hom (↑ f)) ∙ η .N-hom (↑ g))
+
+  PullbackToRepresentable : ∀ {cspn} → Pullback C cspn
+    → RightAdjointAt _ _ (ΔPullback) (F cspn)
+  PullbackToRepresentable pb .vertex = pb .pbOb
+  PullbackToRepresentable pb .element .N-ob o = obMap o pb
 
 
 -- Goal of .N-hom ϕ
@@ -458,8 +448,8 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
 --        Cubical.Categories.NaturalTransformation.Base._.⋆ᴰ F cpsn .F-hom ϕ)
 
   PullbackToRepresentable {cspn} pb .element .N-hom {a} {b} ϕ =
-    let Δₐ = ((ΔPullback ^opF) ⟅ PullbackToRepresentable pb .vertex ⟆) in
-    let η = PullbackToRepresentable pb .element .N-ob in
+    let Δₐ = ((ΔPullback ^opF) ⟅ pb .pbOb ⟆) in
+    let η = (λ (o : obs) → obMap o pb) in
     elimExpProp quiv
     (λ e → C .isSetHom _ _)
     -- have naturality for f and g
@@ -485,6 +475,37 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
       cong (λ x → (η a) ⋆⟨ C ⟩ x ) (sym (F cspn .F-seq e1 e2))
     )
     ϕ
-  PullbackToRepresentable pb .universal .coinduction = {!!}
-  PullbackToRepresentable pb .universal .commutes = {!!}
-  PullbackToRepresentable pb .universal .is-uniq = {!!}
+  PullbackToRepresentable {cspn} pb .universal = record {
+      coinduction = λ η → blah pb η .fst .fst ;
+      commutes = λ {b} η →
+        let ab = blah pb η in
+        makeNatTransPath (funExt (λ {
+          x → sym (ab .fst .snd .fst) ;
+          y →  ((({!refl!}  ∙
+            sym (C .⋆Assoc _ _ _)) ∙
+            cong (λ x → x ⋆⟨ C ⟩ F cspn ⟪ ↑ f ⟫) (sym (ab .fst .snd .fst)) ) ∙
+            sym (η .N-hom (↑ f))) ∙
+            C .⋆IdL (η .N-ob y) ;
+          z → sym (ab .fst .snd .snd)
+        }))
+         ;
+      is-uniq = {!!}
+    }
+  {-
+  PullbackToRepresentable {cspn} pb .universal .coinduction η =
+    blah pb η .fst .fst
+  PullbackToRepresentable {cspn} pb .universal .commutes η =
+    let ab = blah pb η in
+    makeNatTransPath (funExt (λ {
+      x → sym (ab .fst .snd .fst) ;
+      y →  ((({!refl!}  ∙
+        sym (C .⋆Assoc _ _ _)) ∙
+        cong (λ x → x ⋆⟨ C ⟩ F cspn ⟪ ↑ f ⟫) (sym (ab .fst .snd .fst)) ) ∙
+        sym (η .N-hom (↑ f))) ∙
+        C .⋆IdL (η .N-ob y) ;
+      z → sym (ab .fst .snd .snd)
+    }))
+  PullbackToRepresentable {cspn} pb .universal .is-uniq = {!!}
+  -}
+
+  -}
