@@ -4,7 +4,7 @@ module Cubical.Categories.Limits.Pullback.More where
 open import Cubical.Foundations.Prelude
 open import Cubical.Data.Sigma
 
-open import Cubical.Categories.Category renaming (isIso to isIsoC)
+open import Cubical.Categories.Category
 open import Cubical.Categories.Functor
 open import Cubical.Categories.NaturalTransformation
 open import Cubical.Categories.Instances.Functors
@@ -121,26 +121,15 @@ module _ (C : Category ℓ ℓ') where
   open isUniversal
   open Pullback
 
-  obMap : {cspn : Cospan C} → (o : obs) → (pb : Pullback C cspn)
-    → C [ pb .pbOb , F cspn ⟅ o ⟆ ]
-  obMap x pb = pb .pbPr₁
+  -- separated for termination issues
+  obTrans : {cspn : Cospan C} → (pb : Pullback C cspn)
+    → (NatTrans ((ΔPullback ^opF) ⟅ pb .pbOb ⟆) (F cspn))
+  obTrans pb .N-ob x = pb .pbPr₁
   -- Could have equivalently defined this one with pb
   -- .pbPr₂ ⋆⟨ C ⟩ cspn .s₂
   -- but its a pullback so theyre the same
-  obMap {cspn} y pb = pb .pbPr₁ ⋆⟨ C ⟩ cspn .s₁
-  obMap z pb = pb .pbPr₂
-
-  blah : {cspn : Cospan C} {b : C .ob} → (pb : Pullback C cspn)
-    → (η : NatTrans ((ΔPullback ^opF) ⟅ b ⟆) (F cspn))
-    → ∃![ hk ∈ C [ b , pb .pbOb ] ] ((η .N-ob x) ≡ hk ⋆⟨ C ⟩  pb .pbPr₁) × ((η .N-ob z) ≡ hk ⋆⟨ C ⟩  pb .pbPr₂)
-  blah {cspn} {b} pb η = pb .univProp {b} (η .N-ob x) (η .N-ob z) (sym (η .N-hom (↑ f)) ∙ η .N-hom (↑ g))
-
-  PullbackToRepresentable : ∀ {cspn} → Pullback C cspn
-    → RightAdjointAt _ _ (ΔPullback) (F cspn)
-  PullbackToRepresentable pb .vertex = pb .pbOb
-  PullbackToRepresentable pb .element .N-ob o = obMap o pb
-
-
+  obTrans {cspn} pb .N-ob y = pb .pbPr₁ ⋆⟨ C ⟩ cspn .s₁
+  obTrans pb .N-ob z = pb .pbPr₂
   -- Goal of .N-hom ϕ
   -- (((ΔPullback ^opF) ⟅ pb .pbOb ⟆) .F-hom ϕ
   --        Cubical.Categories.NaturalTransformation.Base._.⋆ᴰ
@@ -148,10 +137,8 @@ module _ (C : Category ℓ ℓ') where
   --       ≡
   --       (PullbackToRepresentable pb .element .N-ob x₁
   --        Cubical.Categories.NaturalTransformation.Base._.⋆ᴰ F cpsn .F-hom ϕ)
-
-  PullbackToRepresentable {cspn} pb .element .N-hom {a} {b} ϕ =
+  obTrans {cspn} pb .N-hom {a} {b} ϕ =
     let Δₐ = ((ΔPullback ^opF) ⟅ pb .pbOb ⟆) in
-    let η = (λ (o : obs) → obMap o pb) in
     elimExpProp quiv
     (λ e → C .isSetHom _ _)
     -- have naturality for f and g
@@ -161,33 +148,50 @@ module _ (C : Category ℓ ℓ') where
     })
     -- id is natural
     (λ {a} →
-      cong (λ x → x ⋆⟨ C ⟩ η a) (Δₐ .F-id {a}) ∙
-      C .⋆IdL (η a) ∙
-      sym (C .⋆IdR (η a)) ∙
-      cong (λ x → η a ⋆⟨ C ⟩ x) (sym ((F cspn) .F-id {a}))
+      cong (λ x → x ⋆⟨ C ⟩ obTrans pb .N-ob a) (Δₐ .F-id {a}) ∙
+      C .⋆IdL (obTrans pb .N-ob a) ∙
+      sym (C .⋆IdR (obTrans pb .N-ob a)) ∙
+      cong (λ x → obTrans pb .N-ob a ⋆⟨ C ⟩ x) (sym ((F cspn) .F-id {a}))
     )
     -- squares stack
     (λ {a} {_} {c} e1 e2 Δe1η≡ηFe1 Δe2η≡ηFe2 →
-      cong (λ x → x ⋆⟨ C ⟩ (η c)) (Δₐ .F-seq e1 e2) ∙
+      cong (λ x → x ⋆⟨ C ⟩ (obTrans pb .N-ob c)) (Δₐ .F-seq e1 e2) ∙
       C .⋆Assoc _ _ _ ∙
       cong (λ x → (Δₐ ⟪ e1 ⟫) ⋆⟨ C ⟩ x) Δe2η≡ηFe2 ∙
       sym (C .⋆Assoc _ _ _) ∙
       cong (λ x → x ⋆⟨ C ⟩ (F cspn ⟪ e2 ⟫)) Δe1η≡ηFe1 ∙
       C .⋆Assoc _ _ _ ∙
-      cong (λ x → (η a) ⋆⟨ C ⟩ x ) (sym (F cspn .F-seq e1 e2))
+      cong (λ x → (obTrans pb .N-ob a) ⋆⟨ C ⟩ x ) (sym (F cspn .F-seq e1 e2))
     )
     ϕ
+
+
+  PullbackToRepresentable : ∀ {cspn} → Pullback C cspn
+    → RightAdjointAt _ _ (ΔPullback) (F cspn)
+  PullbackToRepresentable pb .vertex = pb .pbOb
+  PullbackToRepresentable pb .element = obTrans pb
   PullbackToRepresentable {cspn} pb .universal .coinduction η =
-    blah pb η .fst .fst
+    pb .univProp (η .N-ob x) (η .N-ob z)
+      (sym (η .N-hom (↑ f)) ∙ η .N-hom (↑ g))
+      .fst .fst
   PullbackToRepresentable {cspn} pb .universal .commutes η =
-    let ab = blah pb η in
+    let univ = pb .univProp (η .N-ob x) (η .N-ob z)
+                (sym (η .N-hom (↑ f)) ∙ η .N-hom (↑ g)) in
     makeNatTransPath (funExt (λ {
-      x → sym (ab .fst .snd .fst) ;
-      y →  ((({!refl!}  ∙
-        sym (C .⋆Assoc _ _ _)) ∙
-        cong (λ x → x ⋆⟨ C ⟩ F cspn ⟪ ↑ f ⟫) (sym (ab .fst .snd .fst)) ) ∙
-        sym (η .N-hom (↑ f))) ∙
-        C .⋆IdL (η .N-ob y) ;
-      z → sym (ab .fst .snd .snd)
+      x → sym (univ .fst .snd .fst) ;
+      y → sym (C .⋆Assoc _ _ _) ∙
+          cong (λ x → x ⋆⟨ C ⟩ F cspn ⟪ ↑ f ⟫) (sym (univ .fst .snd .fst)) ∙
+          sym (η .N-hom (↑ f)) ∙
+          C .⋆IdL (η .N-ob y) ;
+      z → sym (univ .fst .snd .snd)
     }))
-  PullbackToRepresentable {cspn} pb .universal .is-uniq = {!!}
+  PullbackToRepresentable {cspn} pb .universal .is-uniq η =
+    let univ = pb .univProp (η .N-ob x) (η .N-ob z)
+                (sym (η .N-hom (↑ f)) ∙ η .N-hom (↑ g)) in
+    λ f p → cong fst
+      (sym (univ .snd
+        ( f ,
+          cong (λ a → a .N-ob x) (sym p) ,
+          cong (λ a → a .N-ob z) (sym p)
+        )
+      ))
