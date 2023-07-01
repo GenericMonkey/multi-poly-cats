@@ -1,4 +1,6 @@
 {-# OPTIONS --safe #-}
+
+-- results about pullbacks
 module Cubical.Categories.Limits.Pullback.More where
 
 open import Cubical.Foundations.Prelude
@@ -6,15 +8,14 @@ open import Cubical.Data.Sigma
 
 open import Cubical.Categories.Category
 open import Cubical.Categories.Functor
+open import Cubical.Categories.Morphism
 open import Cubical.Categories.NaturalTransformation
 open import Cubical.Categories.Instances.Functors
+open import Cubical.Categories.Limits.Pullback
 
 open import Cubical.Categories.Adjoint.UniversalElements
-
-
 open import Cubical.Categories.Presheaf.Representable
 
-open import Cubical.Categories.Limits.Pullback
 open import Cubical.Categories.Constructions.Free.Category
    renaming (rec to recCat)
 open import Cubical.Categories.Instances.Functors.More
@@ -25,6 +26,76 @@ private
     ℓ ℓ' : Level
 
 module _ (C : Category ℓ ℓ') where
+
+  open Cospan
+  open Pullback
+  open Category
+
+  PBPreservesMonicL :
+    (cspn : Cospan C) → (pb : Pullback C cspn)
+    → isMonic C (cspn .s₂)
+    → isMonic C (pb .pbPr₁)
+  PBPreservesMonicL cspn pb s2mon {_} {a} {a'} =
+    let pr₁ = pb .pbPr₁
+        pr₂ = pb .pbPr₂
+    in
+    (λ apr₁≡a'pr₁ →
+    -- a == univ-prop for apr₁ and apr₂ (easy)
+    (sym (cong (fst)
+      (pb .univProp (a ⋆⟨ C ⟩ pr₁) (a ⋆⟨ C ⟩ pr₂)
+        (C .⋆Assoc _ _ _ ∙
+        (cong (λ x → a ⋆⟨ C ⟩ x) (pb .pbCommutes)) ∙
+        sym (C .⋆Assoc _ _ _))
+          .snd (a , refl , refl)
+      )
+    )) ∙
+    -- proof that a' is a univ prop for apr₁ and apr₂
+    (cong (fst)
+      (pb .univProp (a ⋆⟨ C ⟩ pr₁) (a ⋆⟨ C ⟩ pr₂)
+        (C .⋆Assoc _ _ _ ∙
+        (cong (λ x → a ⋆⟨ C ⟩ x) (pb .pbCommutes)) ∙
+        sym (C .⋆Assoc _ _ _))
+          .snd (a' ,
+            apr₁≡a'pr₁ ,
+            s2mon
+              (C .⋆Assoc _ _ _ ∙
+              cong (λ x → a ⋆⟨ C ⟩ x) (sym (pb .pbCommutes)) ∙
+              sym (C .⋆Assoc _ _ _) ∙
+              cong (λ x → x ⋆⟨ C ⟩ (cspn .s₁)) apr₁≡a'pr₁ ∙
+              (C .⋆Assoc _ _ _) ∙
+              cong (λ x → a' ⋆⟨ C ⟩ x) (pb .pbCommutes) ∙
+              sym (C .⋆Assoc _ _ _))
+          )
+      )
+    ))
+
+  PBPreservesMonicR :
+    (cspn : Cospan C) → (pb : Pullback C cspn)
+    → isMonic C (cspn .s₁)
+    → isMonic C (pb .pbPr₂)
+  PBPreservesMonicR cspn pb s1mon =
+    PBPreservesMonicL
+      (cospan (cspn .r) (cspn .m) (cspn .l) (cspn .s₂) ( cspn .s₁))
+      (record
+         { pbOb = pb .pbOb
+         ; pbPr₁ = pb .pbPr₂
+         ; pbPr₂ = pb .pbPr₁
+         ; pbCommutes = sym (pb .pbCommutes)
+         ; univProp = λ h k H' →
+           ( pb .univProp k h (sym H') .fst .fst ,
+             pb .univProp k h (sym H') .fst .snd .snd ,
+             pb .univProp k h (sym H') .fst .snd .fst
+            ) , λ (a , (b1 , b2)) →
+              let univ = (pb .univProp k h (sym H') .snd (a , (b2 , b1)))
+                  hk≡ = cong (fst) univ
+                  k≡ = cong (λ x → x .snd .fst) univ
+                  h≡ = cong (λ x → x .snd .snd) univ
+              in
+              ΣPathP ( hk≡ , ΣPathP ( h≡ , k≡ ))
+         }) s1mon
+
+  -- Pullbacks Representability
+module PBRepresentable (C : Category ℓ ℓ') where
   data obs : Type₀ where
     x : obs
     y : obs
@@ -50,11 +121,12 @@ module _ (C : Category ℓ ℓ') where
   Cᴶ = FUNCTOR IndexCat C
 
   open Functor
-  open Category
-  open Cospan
 
   ΔPullback : Functor C Cᴶ
   ΔPullback = curryF IndexCat C {Γ = C} .F-ob (Fst C IndexCat)
+
+  open Cospan
+  open Category
 
 
   IndexCatinC : (Cospan C) → Interp quiv C
