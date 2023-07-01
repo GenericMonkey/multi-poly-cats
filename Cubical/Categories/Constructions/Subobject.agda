@@ -389,6 +389,7 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
 
   F : (cspn : Cospan C) → Cᴶ .ob
   F cspn = recCat quiv C (IndexCatinC cspn)
+
   -- F cspn .F-ob ⓪ = cspn .l
   -- F cspn .F-ob ① = cspn .m
   -- F cspn .F-ob ② = cspn .r
@@ -402,7 +403,8 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
   -- F cspn .F-id {②} = refl
   -- F cspn .F-seq ϕ ψ = {!!}
 
-  PullbackToRepresentable : ∀ {cspn} → Pullback C cspn → RightAdjointAt _ _ (ΔPullback) (F cspn)
+  PullbackToRepresentable : ∀ {cspn} → Pullback C cspn
+    → RightAdjointAt _ _ (ΔPullback) (F cspn)
   PullbackToRepresentable pb .vertex = pb .pbOb
   -- PullbackToRepresentable pb .element = {!!}
   PullbackToRepresentable {cspn} pb .element .N-ob x = pb .pbPr₁
@@ -414,5 +416,35 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
   PullbackToRepresentable {cspn} pb .element .N-ob z = pb .pbPr₂
 
   -- TODO it seems like here we need to pattern match over morphisms in IndexCat
-  PullbackToRepresentable {cspn} pb .element .N-hom ϕ = {!!}
+  PullbackToRepresentable {cspn} pb .element .N-hom {a} {b} ϕ =
+    let Δₐ = ((ΔPullback ^opF) ⟅ PullbackToRepresentable pb .vertex ⟆) in
+    let η = PullbackToRepresentable pb .element .N-ob in
+    elimExpProp quiv
+    {P = λ {k} {j} e →
+      (Δₐ ⟪ e ⟫) ⋆⟨ C ⟩ (η j) ≡ (η k) ⋆⟨ C ⟩ ((F cspn) ⟪ e ⟫)
+    }
+    (λ e → C .isSetHom _ _)
+    -- have naturality for f and g
+    (λ {
+      f → C .⋆IdL _ ;
+      g → C .⋆IdL _ ∙ pb .pbCommutes
+    })
+    -- id is natural
+    (λ {a} →
+      cong (λ x → x ⋆⟨ C ⟩ η a) (Δₐ .F-id {a}) ∙
+      C .⋆IdL (η a) ∙
+      sym (C .⋆IdR (η a)) ∙
+      cong (λ x → η a ⋆⟨ C ⟩ x) (sym ((F cspn) .F-id {a}))
+    )
+    -- squares stack
+    (λ {a} {_} {c} e1 e2 Δe1η≡ηFe1 Δe2η≡ηFe2 →
+      cong (λ x → x ⋆⟨ C ⟩ (η c)) (Δₐ .F-seq e1 e2) ∙
+      C .⋆Assoc _ _ _ ∙
+      cong (λ x → (Δₐ ⟪ e1 ⟫) ⋆⟨ C ⟩ x) Δe2η≡ηFe2 ∙
+      sym (C .⋆Assoc _ _ _) ∙
+      cong (λ x → x ⋆⟨ C ⟩ (F cspn ⟪ e2 ⟫)) Δe1η≡ηFe1 ∙
+      C .⋆Assoc _ _ _ ∙
+      cong (λ x → (η a) ⋆⟨ C ⟩ x ) (sym (F cspn .F-seq e1 e2))
+    )
+    ϕ
   PullbackToRepresentable pb .universal = {!!}
