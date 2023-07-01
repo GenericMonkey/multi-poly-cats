@@ -387,20 +387,6 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
   F : (cspn : Cospan C) → Cᴶ .ob
   F cspn = recCat quiv C (IndexCatinC cspn)
 
-<<<<<<< HEAD
-  -- F cspn .F-ob ⓪ = cspn .l
-  -- F cspn .F-ob ① = cspn .m
-  -- F cspn .F-ob ② = cspn .r
-  -- F cspn .F-hom {⓪}{①} tt = cspn .s₁
-  -- F cspn .F-hom {②}{①} tt = cspn .s₂
-  -- F cspn .F-hom {②}{②} tt = C .id
-  -- F cspn .F-hom {①}{①} tt = C .id
-  -- F cspn .F-hom {⓪}{⓪} tt = C .id
-  -- F cspn .F-id {⓪} = refl
-  -- F cspn .F-id {①} = refl
-  -- F cspn .F-id {②} = refl
-  -- F cspn .F-seq ϕ ψ = {!!}
-=======
   {-
     IndexCat
        f       g
@@ -411,7 +397,7 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
       sends
          s₁       s₂
       l ---> m < --- r
-      
+
       to the functor that mapping
       x ↦ l
       y ↦ m
@@ -419,7 +405,6 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
       f ↦ s₁
       g ↦ s₂
 
-    
     ΔPullback : Functor C Cᴶ
       c : C .ob
       gets sent to the constant functor always returning c and identity morphisms
@@ -448,8 +433,8 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
        F x = l ----- F f = s₁ -----> F y = m
 
     where pbPr₁ and pbPr₂ are the projections of the pullback object
-  -} 
->>>>>>> 3366363f0a8afc1f7f144ac3137bf0695167e315
+  -}
+  open isUniversal
 
   PullbackToRepresentable : ∀ {cspn} → Pullback C cspn
     → RightAdjointAt _ _ (ΔPullback) (F cspn)
@@ -472,15 +457,10 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
 --       (PullbackToRepresentable pb .element .N-ob x₁
 --        Cubical.Categories.NaturalTransformation.Base._.⋆ᴰ F cpsn .F-hom ϕ)
 
-  -- TODO it seems like here we need to pattern match over morphisms in IndexCat
-<<<<<<< HEAD
   PullbackToRepresentable {cspn} pb .element .N-hom {a} {b} ϕ =
     let Δₐ = ((ΔPullback ^opF) ⟅ PullbackToRepresentable pb .vertex ⟆) in
     let η = PullbackToRepresentable pb .element .N-ob in
     elimExpProp quiv
-    {P = λ {k} {j} e →
-      (Δₐ ⟪ e ⟫) ⋆⟨ C ⟩ (η j) ≡ (η k) ⋆⟨ C ⟩ ((F cspn) ⟪ e ⟫)
-    }
     (λ e → C .isSetHom _ _)
     -- have naturality for f and g
     (λ {
@@ -505,8 +485,6 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
       cong (λ x → (η a) ⋆⟨ C ⟩ x ) (sym (F cspn .F-seq e1 e2))
     )
     ϕ
-=======
-  PullbackToRepresentable {cspn} pb .element .N-hom ϕ = {!!}
-
->>>>>>> 3366363f0a8afc1f7f144ac3137bf0695167e315
-  PullbackToRepresentable pb .universal = {!!}
+  PullbackToRepresentable pb .universal .coinduction = {!!}
+  PullbackToRepresentable pb .universal .commutes = {!!}
+  PullbackToRepresentable pb .universal .is-uniq = {!!}
