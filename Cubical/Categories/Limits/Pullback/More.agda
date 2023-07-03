@@ -9,6 +9,7 @@ open import Cubical.Data.Sigma
 open import Cubical.Categories.Category
 open import Cubical.Categories.Functor
 open import Cubical.Categories.Morphism
+open import Cubical.Categories.Profunctor.General
 open import Cubical.Categories.NaturalTransformation
 open import Cubical.Categories.Instances.Functors
 open import Cubical.Categories.Limits.Pullback
@@ -121,13 +122,21 @@ module PBRepresentable (C : Category ℓ ℓ') where
   Cᴶ = FUNCTOR IndexCat C
 
   open Functor
+  open Category
+
+  Functor→Cospan : (Cᴶ .ob) → (Cospan C)
+  Functor→Cospan Fun =
+    cospan
+      (Fun .F-ob x)
+      (Fun .F-ob y)
+      (Fun .F-ob z)
+      (Fun .F-hom ( ↑ f ))
+      (Fun .F-hom ( ↑ g ))
 
   ΔPullback : Functor C Cᴶ
   ΔPullback = curryF IndexCat C {Γ = C} .F-ob (Fst C IndexCat)
 
   open Cospan
-  open Category
-
 
   IndexCatinC : (Cospan C) → Interp quiv C
   IndexCatinC cspn .Interp.I-ob x = cspn .l
@@ -194,13 +203,13 @@ module PBRepresentable (C : Category ℓ ℓ') where
   open Pullback
 
   -- separated for termination issues
-  obTrans : {cspn : Cospan C} → (pb : Pullback C cspn)
-    → (NatTrans ((ΔPullback ^opF) ⟅ pb .pbOb ⟆) (F cspn))
+  obTrans : {cspnFun : Cᴶ .ob} → (pb : Pullback C (Functor→Cospan cspnFun))
+    → (NatTrans ((ΔPullback ^opF) ⟅ pb .pbOb ⟆) cspnFun)
   obTrans pb .N-ob x = pb .pbPr₁
   -- Could have equivalently defined this one with pb
   -- .pbPr₂ ⋆⟨ C ⟩ cspn .s₂
   -- but its a pullback so theyre the same
-  obTrans {cspn} pb .N-ob y = pb .pbPr₁ ⋆⟨ C ⟩ cspn .s₁
+  obTrans {cspnFun} pb .N-ob y = pb .pbPr₁ ⋆⟨ C ⟩ (Functor→Cospan cspnFun) .s₁
   obTrans pb .N-ob z = pb .pbPr₂
   -- Goal of .N-hom ϕ
   -- (((ΔPullback ^opF) ⟅ pb .pbOb ⟆) .F-hom ϕ
@@ -209,7 +218,7 @@ module PBRepresentable (C : Category ℓ ℓ') where
   --       ≡
   --       (PullbackToRepresentable pb .element .N-ob x₁
   --        Cubical.Categories.NaturalTransformation.Base._.⋆ᴰ F cpsn .F-hom ϕ)
-  obTrans {cspn} pb .N-hom {a} {b} ϕ =
+  obTrans {cspnFun} pb .N-hom {a} {b} ϕ =
     let Δₐ = ((ΔPullback ^opF) ⟅ pb .pbOb ⟆) in
     elimExpProp quiv
     (λ e → C .isSetHom _ _)
@@ -223,7 +232,7 @@ module PBRepresentable (C : Category ℓ ℓ') where
       cong (λ x → x ⋆⟨ C ⟩ obTrans pb .N-ob a) (Δₐ .F-id {a}) ∙
       C .⋆IdL (obTrans pb .N-ob a) ∙
       sym (C .⋆IdR (obTrans pb .N-ob a)) ∙
-      cong (λ x → obTrans pb .N-ob a ⋆⟨ C ⟩ x) (sym ((F cspn) .F-id {a}))
+      cong (λ x → obTrans pb .N-ob a ⋆⟨ C ⟩ x) (sym (cspnFun .F-id {a}))
     )
     -- squares stack
     (λ {a} {_} {c} e1 e2 Δe1η≡ηFe1 Δe2η≡ηFe2 →
@@ -231,28 +240,28 @@ module PBRepresentable (C : Category ℓ ℓ') where
       C .⋆Assoc _ _ _ ∙
       cong (λ x → (Δₐ ⟪ e1 ⟫) ⋆⟨ C ⟩ x) Δe2η≡ηFe2 ∙
       sym (C .⋆Assoc _ _ _) ∙
-      cong (λ x → x ⋆⟨ C ⟩ (F cspn ⟪ e2 ⟫)) Δe1η≡ηFe1 ∙
+      cong (λ x → x ⋆⟨ C ⟩ (cspnFun ⟪ e2 ⟫)) Δe1η≡ηFe1 ∙
       C .⋆Assoc _ _ _ ∙
-      cong (λ x → (obTrans pb .N-ob a) ⋆⟨ C ⟩ x ) (sym (F cspn .F-seq e1 e2))
+      cong (λ x → (obTrans pb .N-ob a) ⋆⟨ C ⟩ x ) (sym (cspnFun .F-seq e1 e2))
     )
     ϕ
 
 
-  PullbackToRepresentable : ∀ {cspn} → Pullback C cspn
-    → RightAdjointAt _ _ (ΔPullback) (F cspn)
+  PullbackToRepresentable : ∀ {cspnFun} → Pullback C (Functor→Cospan cspnFun)
+    → RightAdjointAt _ _ (ΔPullback) cspnFun
   PullbackToRepresentable pb .vertex = pb .pbOb
   PullbackToRepresentable pb .element = obTrans pb
   PullbackToRepresentable {cspn} pb .universal .coinduction η =
     pb .univProp (η .N-ob x) (η .N-ob z)
       (sym (η .N-hom (↑ f)) ∙ η .N-hom (↑ g))
       .fst .fst
-  PullbackToRepresentable {cspn} pb .universal .commutes η =
+  PullbackToRepresentable {cspnFun} pb .universal .commutes η =
     let univ = pb .univProp (η .N-ob x) (η .N-ob z)
                 (sym (η .N-hom (↑ f)) ∙ η .N-hom (↑ g)) in
     makeNatTransPath (funExt (λ {
       x → sym (univ .fst .snd .fst) ;
       y → sym (C .⋆Assoc _ _ _) ∙
-          cong (λ x → x ⋆⟨ C ⟩ F cspn ⟪ ↑ f ⟫) (sym (univ .fst .snd .fst)) ∙
+          cong (λ x → x ⋆⟨ C ⟩ cspnFun ⟪ ↑ f ⟫) (sym (univ .fst .snd .fst)) ∙
           sym (η .N-hom (↑ f)) ∙
           C .⋆IdL (η .N-ob y) ;
       z → sym (univ .fst .snd .snd)
@@ -267,3 +276,27 @@ module PBRepresentable (C : Category ℓ ℓ') where
           cong (λ a → a .N-ob z) (sym p)
         )
       ))
+
+  module _ (pb : Pullbacks C) where
+    PullbacksToUnivElts : RightAdjoint C Cᴶ (ΔPullback)
+    PullbacksToUnivElts cspnFun = 
+      PullbackToRepresentable (pb (Functor→Cospan cspnFun))
+
+    PullbackF : Functor Cᴶ C
+    PullbackF = ParamUnivElt→Functor _ _ _ PullbacksToUnivElts
+
+    private
+      module _ (a b c : C .ob) (ϕ : C [ a , b ]) (ψ : C [ c , b ])
+        where
+        cspn : Cospan C
+        cspn = cospan a b c ϕ ψ
+
+        pback : C .ob
+        pback = PullbackF .F-ob (F cspn)
+
+        -- TODO want to write test cases here to check that
+        -- pback has proper definitional behavior
+        -- may be weird because you can't actually access the morphisms
+        -- from pback to each of a and b
+        -- _ : {!!}
+        -- _ = {!!}
