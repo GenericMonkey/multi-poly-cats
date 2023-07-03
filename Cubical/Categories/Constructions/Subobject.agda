@@ -258,4 +258,19 @@ module _ (C : Category ℓC ℓC')  where
         let P = pb cspn in
          [ P .pbOb , (P .pbPr₁ , PBPreservesMonicL C cspn P gmon) ]ₛ
       )
-      (λ (A , (g , gmon)) (B , (h , hmon)) ((k , kh≡g) , kiso) → {!  !} ) [a↪y]
+      (λ (A , (g , gmon)) (B , (h , hmon)) ((k , kh≡g) , kiso) →
+         let cspna = cospan X Y A f g in
+         let cspnb = cospan X Y B f h in
+         let univb = (pb cspnb .univProp
+                        (pb cspna .pbPr₁)
+                        (pb cspna .pbPr₂ ⋆⟨ C ⟩ k)
+                        (pb cspna .pbCommutes ∙
+                          cong (λ x → pb cspna .pbPr₂ ⋆⟨ C ⟩ x) (sym kh≡g) ∙
+                          sym (C .⋆Assoc _ _ _)
+                        )
+                     )
+         in
+         isEquivRel→effectiveIso isProp↪Iso isEquivRel↪Iso _ _ .Iso.inv
+         ((univb .fst .fst , sym (univb .fst .snd .fst)) ,
+         {!!})
+      ) [a↪y]

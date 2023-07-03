@@ -151,6 +151,34 @@ module PBRepresentable (C : Category ℓ ℓ') where
   F : (cspn : Cospan C) → Cᴶ .ob
   F cspn = recCat quiv C (IndexCatinC cspn)
 
+  ShiftCospanR : {b : C .ob} → (cspn : Cospan C)
+    → (C [ b , cspn .m ])
+    → Cospan C
+  ShiftCospanR {b} cspn ϕ = cospan (cspn .l) (cspn .m) b (cspn .s₁) ϕ
+
+  FLiftIsoR : {b : C .ob} {cspn : Cospan C}
+    → (ϕ : C [ b , cspn .m ])
+    → CatIso C (cspn .r) (b)
+    → NatIso (F cspn) (F (ShiftCospanR cspn ϕ))
+  FLiftIsoR {b} {cspn} ϕ (k , kiso) =
+    let η = λ {x → C .id ; y → C .id ; z → k} in
+    record {
+    trans = natTrans
+      η
+      (elimExpProp
+      quiv (λ e → C .isSetHom _ _)
+      (λ {f → C .⋆IdR _ ∙ sym (C .⋆IdL _) ; g → C .⋆IdR _ ∙ {!!}}) {!!}
+      (λ {a} {_} {c} e1 e2 Fe1η≡ηsFe1 Fe2η≡ηsFe2 →
+        cong (λ x → x ⋆⟨ C ⟩ (η c)) ((F cspn) .F-seq e1 e2) ∙
+        C .⋆Assoc _ _ _ ∙
+        cong (λ x → ((F cspn) ⟪ e1 ⟫) ⋆⟨ C ⟩ x) Fe2η≡ηsFe2 ∙
+        sym (C .⋆Assoc _ _ _) ∙
+        cong (λ x → x ⋆⟨ C ⟩ ((F (ShiftCospanR cspn ϕ)) ⟪ e2 ⟫)) Fe1η≡ηsFe1 ∙
+        C .⋆Assoc _ _ _ ∙
+        cong (λ x → (η a) ⋆⟨ C ⟩ x ) (sym ((F (ShiftCospanR cspn ϕ)) .F-seq e1 e2))
+      )
+      ) ;
+    nIso = {!!} }
   {-
     IndexCat
        f       g
