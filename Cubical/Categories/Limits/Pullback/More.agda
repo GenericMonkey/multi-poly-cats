@@ -13,6 +13,7 @@ open import Cubical.Categories.Profunctor.General
 open import Cubical.Categories.NaturalTransformation
 open import Cubical.Categories.Instances.Functors
 open import Cubical.Categories.Limits.Pullback
+open import Cubical.Categories.Limits.BinProduct.More
 
 open import Cubical.Categories.Adjoint.UniversalElements
 open import Cubical.Categories.Presheaf.Representable
@@ -158,16 +159,23 @@ module PBRepresentable (C : Category ℓ ℓ') where
 
   FLiftIsoR : {b : C .ob} {cspn : Cospan C}
     → (ϕ : C [ b , cspn .m ])
-    → CatIso C (cspn .r) (b)
+    → (h : CatIso C (cspn .r) (b))
+    → (cspn .s₂ ≡ h .fst ⋆⟨ C ⟩ ϕ)
     → NatIso (F cspn) (F (ShiftCospanR cspn ϕ))
-  FLiftIsoR {b} {cspn} ϕ (k , kiso) =
+  FLiftIsoR {b} {cspn} ϕ (k , kiso) p =
     let η = λ {x → C .id ; y → C .id ; z → k} in
     record {
     trans = natTrans
       η
       (elimExpProp
       quiv (λ e → C .isSetHom _ _)
-      (λ {f → C .⋆IdR _ ∙ sym (C .⋆IdL _) ; g → C .⋆IdR _ ∙ {!!}}) {!!}
+      (λ {f → C .⋆IdR _ ∙ sym (C .⋆IdL _) ; g → C .⋆IdR _ ∙ p})
+      (λ {a} →
+        cong (λ x → x ⋆⟨ C ⟩ (η a)) ((F cspn) .F-id {a}) ∙
+        C .⋆IdL (η a) ∙
+        sym (C .⋆IdR (η a)) ∙
+        cong (λ x → η a ⋆⟨ C ⟩ x) (sym (F (ShiftCospanR cspn ϕ) .F-id {a}))
+      )
       (λ {a} {_} {c} e1 e2 Fe1η≡ηsFe1 Fe2η≡ηsFe2 →
         cong (λ x → x ⋆⟨ C ⟩ (η c)) ((F cspn) .F-seq e1 e2) ∙
         C .⋆Assoc _ _ _ ∙
@@ -178,7 +186,9 @@ module PBRepresentable (C : Category ℓ ℓ') where
         cong (λ x → (η a) ⋆⟨ C ⟩ x ) (sym ((F (ShiftCospanR cspn ϕ)) .F-seq e1 e2))
       )
       ) ;
-    nIso = {!!} }
+    nIso =
+      (λ { x → idCatIso .snd ; y → idCatIso .snd ; z → kiso })
+    }
   {-
     IndexCat
        f       g
@@ -314,7 +324,10 @@ module PBRepresentable (C : Category ℓ ℓ') where
     PullbackF = ParamUnivElt→Functor _ _ _ PullbacksToUnivElts
 
     private
-      module _ (a b c : C .ob) (ϕ : C [ a , b ]) (ψ : C [ c , b ])
+      module _ (a b c d : C .ob)
+               (ϕ : C [ a , b ]) (ψ : C [ c , b ])
+               (da : C [ d , a ]) (dc : C [ d , c ])
+               (p : da ⋆⟨ C ⟩ ϕ ≡ dc ⋆⟨ C ⟩ ψ)
         where
         cspn : Cospan C
         cspn = cospan a b c ϕ ψ
@@ -322,9 +335,21 @@ module PBRepresentable (C : Category ℓ ℓ') where
         pback : C .ob
         pback = PullbackF .F-ob (F cspn)
 
-        -- TODO want to write test cases here to check that
-        -- pback has proper definitional behavior
-        -- may be weird because you can't actually access the morphisms
-        -- from pback to each of a and b
-        -- _ : {!!}
-        -- _ = {!!}
+        pbackPr₁ : C [ pback , a ]
+        pbackPr₁ =  PullbacksToUnivElts (F cspn) .element .N-ob x
+
+        pbackPr₂ : C [ pback , c ]
+        pbackPr₂ =  PullbacksToUnivElts (F cspn) .element .N-ob z
+
+        pbackCommutes : pbackPr₁ ⋆⟨ C ⟩ cspn .s₁ ≡ pbackPr₂ ⋆⟨ C ⟩ cspn .s₂
+        pbackCommutes = sym (PullbacksToUnivElts (F cspn) .element .N-hom (↑ f))
+          ∙ PullbacksToUnivElts (F cspn) .element .N-hom (↑ g)
+
+        h : C [ d , pback ]
+        h = pb _ .univProp da dc p .fst .fst
+
+        hCommutesA : da ≡ (h ⋆⟨ C ⟩ pbackPr₁)
+        hCommutesA = pb _ .univProp da dc p .fst .snd .fst
+
+        hCommutesB : dc ≡ (h ⋆⟨ C ⟩ pbackPr₂)
+        hCommutesB = pb _ .univProp da dc p .fst .snd .snd
