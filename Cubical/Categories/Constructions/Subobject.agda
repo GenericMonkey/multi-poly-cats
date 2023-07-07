@@ -18,6 +18,8 @@ open import Cubical.HITs.PropositionalTruncation renaming
 open import Cubical.Data.Sigma
 
 open import Cubical.Categories.Category renaming (isIso to isIsoC)
+open import Cubical.Categories.Functor
+open import Cubical.Categories.Instances.Functors
 open import Cubical.Categories.Morphism
 open import Cubical.Categories.Limits.Pullback
 open import Cubical.Relation.Binary
@@ -262,15 +264,32 @@ module _ (C : Category ℓC ℓC')  where
          let cspna = cospan X Y A f g in
          let cspnb = cospan X Y B f h in
          let univb = (pb cspnb .univProp
-                        (pb cspna .pbPr₁)
+                        (pb cspna .pbPr₁ ⋆⟨ C ⟩ C .id)
                         (pb cspna .pbPr₂ ⋆⟨ C ⟩ k)
-                        (pb cspna .pbCommutes ∙
+                        (
+                          cong (λ x → x ⋆⟨ C ⟩ f) (C .⋆IdR (pb cspna .pbPr₁)) ∙
+                          pb cspna .pbCommutes ∙
                           cong (λ x → pb cspna .pbPr₂ ⋆⟨ C ⟩ x) (sym kh≡g) ∙
                           sym (C .⋆Assoc _ _ _)
                         )
                      )
          in
-         isEquivRel→effectiveIso isProp↪Iso isEquivRel↪Iso _ _ .Iso.inv
-         ((univb .fst .fst , sym (univb .fst .snd .fst)) ,
-         {!!})
+         -- testing shiftcospan
+         let _ = cspnb ≡⟨ refl ⟩ (PBRepresentable.ShiftCospanR C cspna h) ∎ in
+         let X = preserveIsosF {_} {_} {_} {_} {_} {_} {PBRepresentable.PullbackF C pb}
+                   (NatIso→FUNCTORIso
+                     (PBRepresentable.IndexCat C) C
+                       (PBRepresentable.FLiftIsoR C {B} {cspna} h (k , kiso) (sym kh≡g))
+                   ) .snd
+         in
+         isEquivRel→effectiveIso isProp↪Iso isEquivRel↪Iso _ _ .Iso.inv (
+           (univb .fst .fst , sym (univb .fst .snd .fst) ∙ C .⋆IdR _) ,
+           isiso (X .inv) {!X .sec!} {! X .ret!})
+           {-
+           preserveIsosF {_} {_} {_} {_} {_} {_} {PBRepresentable.PullbackF C pb}
+             (NatIso→FUNCTORIso
+               (PBRepresentable.IndexCat C) C
+               (PBRepresentable.FLiftIsoR C h (k , kiso) (sym kh≡g))
+              ) .snd)
+          -}
       ) [a↪y]
