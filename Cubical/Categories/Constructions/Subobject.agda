@@ -258,7 +258,7 @@ module _ (C : Category ℓC ℓC')  where
       (λ (A , (g , gmon)) →
         let cspn = (cospan X Y A f g) in
         let P = pb cspn in
-         [ P .pbOb , (P .pbPr₁ , PBPreservesMonicL C cspn P gmon) ]ₛ
+         [ P .pbOb , (P .pbPr₁ , PBPreservesMonicL C P gmon) ]ₛ
       )
       (λ (A , (g , gmon)) (B , (h , hmon)) ((k , kh≡g) , kiso) →
          let cspna = cospan X Y A f g in
