@@ -34,10 +34,10 @@ module _ (C : Category ℓ ℓ') where
   open Category
 
   PBPreservesMonicL :
-    (cspn : Cospan C) → (pb : Pullback C cspn)
+    {cspn : Cospan C} → (pb : Pullback C cspn)
     → isMonic C (cspn .s₂)
     → isMonic C (pb .pbPr₁)
-  PBPreservesMonicL cspn pb s2mon {_} {a} {a'} =
+  PBPreservesMonicL {cspn} pb s2mon {_} {a} {a'} =
     let pr₁ = pb .pbPr₁
         pr₂ = pb .pbPr₂
     in
@@ -72,12 +72,11 @@ module _ (C : Category ℓ ℓ') where
     ))
 
   PBPreservesMonicR :
-    (cspn : Cospan C) → (pb : Pullback C cspn)
+    {cspn : Cospan C} → (pb : Pullback C cspn)
     → isMonic C (cspn .s₁)
     → isMonic C (pb .pbPr₂)
-  PBPreservesMonicR cspn pb s1mon =
+  PBPreservesMonicR {cspn} pb s1mon =
     PBPreservesMonicL
-      (cospan (cspn .r) (cspn .m) (cspn .l) (cspn .s₂) ( cspn .s₁))
       (record
          { pbOb = pb .pbOb
          ; pbPr₁ = pb .pbPr₂
@@ -98,15 +97,16 @@ module _ (C : Category ℓ ℓ') where
 
   -- Pullbacks Representability
 module PBRepresentable (C : Category ℓ ℓ') where
-  data obs : Type₀ where
-    x : obs
-    y : obs
-    z : obs
+  private
+    data obs : Type₀ where
+      x : obs
+      y : obs
+      z : obs
 
 
-  data homs_quiv : Type (ℓ-suc ℓ-zero) where
-    f : homs_quiv
-    g : homs_quiv
+    data homs_quiv : Type (ℓ-suc ℓ-zero) where
+      f : homs_quiv
+      g : homs_quiv
 
   quiv : Quiver ℓ-zero (ℓ-suc ℓ-zero)
   quiv .Quiver.ob = obs
