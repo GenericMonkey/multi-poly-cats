@@ -9,9 +9,18 @@ open import Cubical.Categories.Morphism
 open import Cubical.Categories.Limits.Pullback
 open import Cubical.Categories.Constructions.FullSubcategory
 open import Cubical.Categories.Constructions.Slice
+open import Cubical.Categories.Constructions.PosetalReflection.Base
 
 open import Cubical.Categories.Constructions.Slice.Functor
 open import Cubical.Categories.Limits.Pullback.More
+
+open import Cubical.Categories.Instances.Posets.Base
+open import Cubical.Categories.Instances.Preorders.Base
+
+open import Cubical.Relation.Binary.Base
+open import Cubical.Relation.Binary.Poset
+open import Cubical.Relation.Binary.Preorder
+
 
 
 module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
@@ -25,8 +34,6 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
   Mono : (C .ob) → Category _ _
   Mono X = FullSubcategory (SliceCat C X) monic
 
-
-
   MonoFunc : {X Y : C .ob} → (f : C [ X , Y ])
     → (pbf : PbWithf C f)
     → Functor (Mono Y) (Mono X)
@@ -35,3 +42,11 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
       (SliceFunctor C f pbf)
         λ A→Y A→Ymon →
           PBPreservesMonicL C (pbf A→Y) A→Ymon
+
+  SubObject : (C .ob) → Poset _ _
+  SubObject X = PosetalReflection' (Mono X)
+
+  -- Feel like we may want this in the category of posets
+  -- rather than just a poset
+  SubObjectInPOSET : (C .ob) → POSET _ _ .ob
+  SubObjectInPOSET X = PosetalReflection (Mono X)

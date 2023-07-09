@@ -96,3 +96,20 @@ POSETADJR : (ℓ ℓ' : Level) → Category _ _
 POSETADJR ℓ ℓ' = Grothendieck
   (PREORDER ℓ ℓ')
   (DisplayedPoset→Cat (PREORDER ℓ ℓ') RightAdjDisplay)
+
+-- TODO Rename and put somewhere else.
+-- Also these might exist somewhere else
+Poset→Preorder : {ℓ ℓ' : Level} → Poset ℓ ℓ'  → Preorder ℓ ℓ'
+Poset→Preorder P .fst = P .fst
+Poset→Preorder P .snd .PreorderStr._≤_ = P .snd .PosetStr._≤_
+Poset→Preorder P .snd .PreorderStr.isPreorder .IsPreorder.is-prop-valued =
+  P .snd .PosetStr.isPoset .IsPoset.is-prop-valued
+Poset→Preorder P .snd .PreorderStr.isPreorder .IsPreorder.is-refl =
+  P .snd .PosetStr.isPoset .IsPoset.is-refl
+Poset→Preorder P .snd .PreorderStr.isPreorder .IsPreorder.is-trans =
+  P .snd .PosetStr.isPoset .IsPoset.is-trans
+
+Poset→POSETOb : {ℓ ℓ' : Level} → Poset ℓ ℓ'  → POSET ℓ ℓ' .ob
+Poset→POSETOb P .fst =
+  Poset→Preorder P , P .snd .PosetStr.isPoset .IsPoset.is-set
+Poset→POSETOb P .snd = P .snd .PosetStr.isPoset

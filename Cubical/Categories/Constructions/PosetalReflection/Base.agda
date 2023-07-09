@@ -5,7 +5,7 @@
 -}
 {-# OPTIONS --safe #-}
 
-module Cubical.Categories.Constructions.PosetalReflection where
+module Cubical.Categories.Constructions.PosetalReflection.Base where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
@@ -144,9 +144,9 @@ module _ (C : Category ℓC ℓC') where
     ([]surjective [a])
     ([]surjective [b])
 
-  PosetalReflection : Poset _ _
-  PosetalReflection .fst = C .ob / OrderEquiv
-  PosetalReflection .snd =
+  PosetalReflection' : Poset _ _
+  PosetalReflection' .fst = C .ob / OrderEquiv
+  PosetalReflection' .snd =
     posetstr (λ a b → ⟨ a ≤q b ⟩)
     (isposet
       isSetQuotientByOrderEquiv
@@ -154,3 +154,6 @@ module _ (C : Category ℓC ℓC') where
       isRefl≤q
       isTrans≤q
       isAntisym≤q)
+
+  PosetalReflection : POSET _ _ .ob
+  PosetalReflection = Poset→POSETOb PosetalReflection'
