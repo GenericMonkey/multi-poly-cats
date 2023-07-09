@@ -65,19 +65,25 @@ module _ (C : Category ℓC ℓC')
         elimp (λ _ → isPropPropTrunc) (λ f → ∣ F ⟪ f ⟫ ∣₁) (aOEb .fst) ,
         elimp (λ _ → isPropPropTrunc) (λ f → ∣ F ⟪ f ⟫ ∣₁) (aOEb .snd)))
       x
-  -- TODO Given a morphism [ϕ] from [x] to [y] (which is just an ordering [x] ≤c [y]), we want
+  -- Given a morphism [ϕ] from [x] to [y] (which is just an ordering [x] ≤c [y]), we want
   -- to construct a morphism from [F ⟅ x ⟆] to [F ⟅ y ⟆] (which is just an ordering [F ⟅ x ⟆] ≤d [F ⟅ y ⟆]).
   -- This should be done by deconstructing [ϕ] into some underlying morphism on representatives
   -- ϕ : x → y and then using [F ⟪ ϕ ⟫] to get a morphism from [F ⟅ x ⟆] to [F ⟅ y ⟆].
   -- The tricky part is understanding what [F ⟪ ϕ ⟫] should be
   ReflectedFunctor .F-hom {[x]}{[y]} [ϕ] =
     rec2p
-    {!should be is-prop-valued or isSetHom!}
+    -- TODO some sort of isProp
+    {!!}
     (λ (x , xrep) (y , yrep) →
       elimp
-      (λ _ → {!should be is-prop-valued or isSetHom!})
-      -- Here we turn [ϕ] into an actual morphism ϕ and should be able to do something with it
-      (λ ϕ → {!F ⟪ ϕ ⟫!})
+      -- TODO some sort of isProp
+      ({!!})
+      (λ ϕ →
+        transport (cong (λ z → ⟨ [ F ⟅ x ⟆ ]ₛ ≤d ReflectedFunctor ⟅ z ⟆ ⟩) yrep ∙
+                   cong (λ z → ⟨ ReflectedFunctor ⟅ z ⟆ ≤d ReflectedFunctor ⟅ [y] ⟆ ⟩) xrep)
+                   -- TODO termination issue on the line above, may clear up after holes are filled
+        ∣ F ⟪ ϕ ⟫ ∣₁
+      )
       (transport
         (sym(cong (λ z → ⟨ [ x ]ₛ ≤c z ⟩) yrep ∙
           cong
@@ -85,5 +91,16 @@ module _ (C : Category ℓC ℓC')
     )
     ([]surjective [x])
     ([]surjective [y])
-  ReflectedFunctor .F-id = {!!}
-  ReflectedFunctor .F-seq f g = {!!}
+  -- TODO I have no idea if this F-id is remotely correct
+  ReflectedFunctor .F-id {[x]} =
+    elim
+    {P = λ [c] → ReflectedFunctor .F-hom (isRefl≤q C [c]) ≡ isRefl≤q D (ReflectedFunctor .F-ob [c])}
+    {!!}
+    (λ c i → ∣ F .F-id {c} i ∣₁)
+    {!!}
+    [x]
+  -- TODO F-seq should probably be some sort of is-trans??
+  ReflectedFunctor .F-seq [f] [g] = {!!}
+
+-- ReflectedFunctor .F-hom (isRefl≤q C [x]) ≡
+      -- isRefl≤q D (ReflectedFunctor .F-ob [x])
