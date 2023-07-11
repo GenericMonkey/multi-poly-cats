@@ -56,7 +56,7 @@ module _ (C : Category ℓC ℓC')
 
   ReflectedFunctor : Functor (PosetCategory (PosetalReflection' C))
                              (PosetCategory (PosetalReflection' D))
-  ReflectedFunctor .F-ob x =
+  ReflectedFunctor .F-ob [x] =
     rec
       squash/
       (λ c → [ F ⟅ c ⟆ ]ₛ)
@@ -64,24 +64,29 @@ module _ (C : Category ℓC ℓC')
         (
         elimp (λ _ → isPropPropTrunc) (λ f → ∣ F ⟪ f ⟫ ∣₁) (aOEb .fst) ,
         elimp (λ _ → isPropPropTrunc) (λ f → ∣ F ⟪ f ⟫ ∣₁) (aOEb .snd)))
-      x
-  -- Given a morphism [ϕ] from [x] to [y] (which is just an ordering [x] ≤c [y]), we want
-  -- to construct a morphism from [F ⟅ x ⟆] to [F ⟅ y ⟆] (which is just an ordering [F ⟅ x ⟆] ≤d [F ⟅ y ⟆]).
-  -- This should be done by deconstructing [ϕ] into some underlying morphism on representatives
-  -- ϕ : x → y and then using [F ⟪ ϕ ⟫] to get a morphism from [F ⟅ x ⟆] to [F ⟅ y ⟆].
+      [x]
+  -- Given a morphism [ϕ] from [x] to [y]
+  -- (which is just an ordering [x] ≤c [y]), we want
+  -- to construct a morphism from [F ⟅ x ⟆] to [F ⟅ y ⟆]
+  -- (which is just an ordering [F ⟅ x ⟆] ≤d [F ⟅ y ⟆]).
+  -- This should be done by deconstructing [ϕ] into some
+  -- underlying morphism on representatives
+  -- ϕ : x → y and then using [F ⟪ ϕ ⟫] to get a morphism from
+  -- [F ⟅ x ⟆] to [F ⟅ y ⟆].
   -- The tricky part is understanding what [F ⟪ ϕ ⟫] should be
   ReflectedFunctor .F-hom {[x]}{[y]} [ϕ] =
     rec2p
-    -- TODO some sort of isProp
-    {!!}
-    (λ (x , xrep) (y , yrep) →
+    (PosetalReflection' D .snd .PosetStr.is-prop-valued
+    (ReflectedFunctor .F-ob [x]) (ReflectedFunctor .F-ob [y]))
+    (λ (x , xrep) (y , yrep) → 
       elimp
-      -- TODO some sort of isProp
-      ({!!})
+      (λ a → (PosetalReflection' D .snd .PosetStr.is-prop-valued
+      (ReflectedFunctor .F-ob [x]) (ReflectedFunctor .F-ob [y])))
       (λ ϕ →
-        transport (cong (λ z → ⟨ [ F ⟅ x ⟆ ]ₛ ≤d ReflectedFunctor ⟅ z ⟆ ⟩) yrep ∙
-                   cong (λ z → ⟨ ReflectedFunctor ⟅ z ⟆ ≤d ReflectedFunctor ⟅ [y] ⟆ ⟩) xrep)
-                   -- TODO termination issue on the line above, may clear up after holes are filled
+        transport
+          (cong (λ z → ⟨ [ F ⟅ x ⟆ ]ₛ ≤d ReflectedFunctor .F-ob z ⟩) yrep ∙
+           cong (λ z →
+           ⟨ ReflectedFunctor .F-ob z ≤d ReflectedFunctor .F-ob [y] ⟩) xrep)
         ∣ F ⟪ ϕ ⟫ ∣₁
       )
       (transport
@@ -91,16 +96,20 @@ module _ (C : Category ℓC ℓC')
     )
     ([]surjective [x])
     ([]surjective [y])
-  -- TODO I have no idea if this F-id is remotely correct
   ReflectedFunctor .F-id {[x]} =
-    elim
-    {P = λ [c] → ReflectedFunctor .F-hom (isRefl≤q C [c]) ≡ isRefl≤q D (ReflectedFunctor .F-ob [c])}
-    {!!}
-    (λ c i → ∣ F .F-id {c} i ∣₁)
-    {!!}
-    [x]
-  -- TODO F-seq should probably be some sort of is-trans??
-  ReflectedFunctor .F-seq [f] [g] = {!!}
-
--- ReflectedFunctor .F-hom (isRefl≤q C [x]) ≡
-      -- isRefl≤q D (ReflectedFunctor .F-ob [x])
+    PosetalReflection' D .snd .PosetStr.is-prop-valued
+      (ReflectedFunctor .F-ob [x]) (ReflectedFunctor .F-ob [x])
+      (ReflectedFunctor .F-hom {[x]}{[x]}
+      (PosetCategory (PosetalReflection' C) .id {[x]}))
+      (PosetCategory (PosetalReflection' D) .id {ReflectedFunctor .F-ob [x]})
+  ReflectedFunctor .F-seq {[x]}{[y]}{[z]} [f] [g] =
+    PosetalReflection' D .snd .PosetStr.is-prop-valued
+      (ReflectedFunctor .F-ob [x]) (ReflectedFunctor .F-ob [z])
+      (ReflectedFunctor .F-hom {[x]}{[z]}
+        (seq' (PosetCategory (PosetalReflection' C))
+          {x = [x]}{y = [y]}{z = [z]} [f] [g]))
+      (seq' (PosetCategory (PosetalReflection' D))
+      {x = ReflectedFunctor .F-ob [x]}
+      {y = ReflectedFunctor .F-ob [y]}{z = ReflectedFunctor .F-ob [z]}
+        (ReflectedFunctor .F-hom {[x]}{[y]} [f])
+        (ReflectedFunctor .F-hom {[y]}{[z]} [g]))
