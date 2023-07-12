@@ -51,11 +51,11 @@ module _ {ℓC ℓC' : Level} (C : Category ℓC ℓC')  where
   SubObject' : (C .ob) → Category _ _
   SubObject' X = PosetCategory (PosetalReflection' (Mono X))
 
-  -- Feel like we may want this in the category of posets
+  -- TODO Feel like we may want this in the category of posets
   -- rather than just a poset
   SubObjectInPOSET : (C .ob) → POSET _ _ .ob
   SubObjectInPOSET X = PosetalReflection (Mono X)
 
   inducedMap : {X Y : C .ob} → (f : C [ X , Y ]) → (pbf : PbWithf C f) →
-               Functor (SubObject' X) (SubObject' Y)
-  inducedMap {X}{Y} f pbf = {!ReflectedFunctor (SubObject' X) (SubObject' Y) ?!}
+               Functor (SubObject' Y) (SubObject' X)
+  inducedMap {X}{Y} f pbf = ReflectedFunctor (Mono Y) (Mono X) (MonoFunc f pbf)
